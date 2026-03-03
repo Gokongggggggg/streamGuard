@@ -6,7 +6,7 @@
  */
 
 const pool = require("./pool");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 
 const SALT_ROUNDS = 10;
