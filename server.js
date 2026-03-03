@@ -16,6 +16,7 @@ const { WebSocketServer } = require("ws");
 const path = require("path");
 
 const SaweriaProvider = require("./providers/saweria");
+const TrakteerProvider = require("./providers/trakteer");
 const { filterMessage } = require("./filters/judolFilter");
 const UserModel = require("./db/userModel");
 const DonationModel = require("./db/donationModel");
@@ -203,6 +204,7 @@ app.post("/api/auth/login", async (req, res) => {
 // ══════════════════════════════════════════
 
 const saweria = new SaweriaProvider("");
+const trakteer = new TrakteerProvider();
 
 app.post("/webhook/saweria/:webhookToken", async (req, res) => {
   try {
@@ -213,6 +215,25 @@ app.post("/webhook/saweria/:webhookToken", async (req, res) => {
 
     const donation = saweria.parseDonation(req.body);
     console.log(`[Saweria] ${user.username || user.email}: ${donation.donator} - Rp${donation.amountDisplay} - "${donation.message}"`);
+
+    await processDonation(user, donation);
+    res.status(200).json({ status: "received" });
+  } catch (err) {
+    console.error("[Webhook] Error:", err.message);
+    res.status(500).json({ error: "Processing failed" });
+  }
+});
+
+// Trakteer webhook
+app.post("/webhook/trakteer/:webhookToken", async (req, res) => {
+  try {
+    const user = await UserModel.findByWebhookToken(req.params.webhookToken);
+    if (!user) {
+      return res.status(404).json({ error: "Invalid webhook token" });
+    }
+
+    const donation = trakteer.parseDonation(req.body);
+    console.log(`[Trakteer] ${user.username || user.email}: ${donation.donator} - Rp${donation.amountDisplay} - "${donation.message}"`);
 
     await processDonation(user, donation);
     res.status(200).json({ status: "received" });

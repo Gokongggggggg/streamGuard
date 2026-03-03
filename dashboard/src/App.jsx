@@ -466,6 +466,7 @@ function PageOverview({ user, stats, baseUrl }) {
       <Card glow={T.accent + "33"}>
         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Quick Setup</h3>
         <CopyField label="Webhook URL — paste di Saweria Integration" value={`${baseUrl}/webhook/saweria/${user.webhook_token}`} />
+        <CopyField label="Webhook URL Trakteer — paste di Trakteer Integration → Webhook" value={`${baseUrl}/webhook/trakteer/${user.webhook_token}`} />
         <CopyField label="Overlay URL — paste di OBS Browser Source" value={`${baseUrl}/overlay?token=${user.overlay_token}`} />
       </Card>
     </div>
@@ -479,7 +480,7 @@ function PageOverview({ user, stats, baseUrl }) {
 function PagePlatforms({ user, baseUrl }) {
   const platforms = [
     { id: "saweria", name: "Saweria", status: "active", color: "#F7A41C", desc: "Indonesia's #1 donation platform", icon: "S" },
-    { id: "trakteer", name: "Trakteer", status: "coming", color: "#E91E63", desc: "Support creators with treats", icon: "T" },
+    { id: "trakteer", name: "Trakteer", status: "active", color: "#E91E63", desc: "Dukung kreator favoritmu", icon: "T" },
     { id: "sociabuzz", name: "Sociabuzz", status: "coming", color: "#7C3AED", desc: "Monetize your social presence", icon: "S" },
     { id: "streamlabs", name: "Streamlabs", status: "coming", color: "#80F5D2", desc: "Global streaming toolkit", icon: "S" },
   ];
@@ -509,6 +510,26 @@ function PagePlatforms({ user, baseUrl }) {
           </Card>
         ))}
       </div>
+
+      <Card glow="#E91E6333" style={{ marginTop: 16 }}>
+  <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, color: "#E91E63" }}>Panduan Setup Trakteer</h3>
+  <CopyField label="1. Webhook URL" value={`${baseUrl}/webhook/trakteer/${user.webhook_token}`} />
+  <CopyField label="2. Overlay URL (sama seperti Saweria)" value={`${baseUrl}/overlay?token=${user.overlay_token}`} />
+
+  <div style={{
+    padding: 16, borderRadius: 8, background: "rgba(233,30,99,0.06)",
+    border: "1px solid rgba(233,30,99,0.15)", marginTop: 16,
+  }}>
+    <div style={{ fontSize: 13, color: "#E91E63", fontWeight: 600, marginBottom: 10 }}>Langkah-langkah</div>
+    <div style={{ fontSize: 13, color: T.textDim, lineHeight: 2 }}>
+      1. Buka <b style={{ color: T.text }}>trakteer.id</b> → Login<br />
+      2. Buka <b style={{ color: T.text }}>Integrasi</b> → <b style={{ color: T.text }}>Webhook</b><br />
+      3. Paste <b style={{ color: T.text }}>Webhook URL</b> di atas → Simpan<br />
+      4. Klik <b style={{ color: T.text }}>Send Webhook Test</b> untuk verifikasi<br />
+      5. Aktifkan toggle webhook
+    </div>
+  </div>
+</Card>
 
       <Card glow={`#F7A41C33`}>
         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, color: "#F7A41C" }}>
