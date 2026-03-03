@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StreamGuard Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: transparent;
+      overflow: hidden;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    #overlay {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+    }
+
+    .donation-alert {
+      opacity: 0;
+      transform: translateY(30px) scale(0.9);
+      animation: alertIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      position: relative;
+    }
+
+    .donation-alert.exit {
+      animation: alertOut 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+    }
+
+    @keyframes alertIn {
+      0% { opacity: 0; transform: translateY(30px) scale(0.9); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes alertOut {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    }
+
+    .alert-card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 20px 28px;
+      min-width: 340px;
+      max-width: 500px;
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 60px rgba(34, 211, 238, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .alert-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #22d3ee, #a78bfa, transparent);
+    }
+
+    .alert-card::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 20%, rgba(34, 211, 238, 0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .alert-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .alert-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #22d3ee, #a78bfa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      color: #0f172a;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(34, 211, 238, 0.25);
+    }
+
+    .alert-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .alert-name {
+      font-weight: 700;
+      font-size: 16px;
+      color: #f1f5f9;
+      letter-spacing: -0.3px;
+    }
+
+    .alert-amount {
+      font-weight: 800;
+      font-size: 14px;
+      background: linear-gradient(135deg, #22d3ee, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .alert-message {
+      font-size: 15px;
+      color: #cbd5e1;
+      line-height: 1.5;
+      position: relative;
+      z-index: 1;
+      word-wrap: break-word;
+    }
+
+    .alert-glow {
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, rgba(167, 139, 250, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    #status {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.2);
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    #status.connected { color: rgba(16, 185, 129, 0.3); }
+    #status.disconnected { color: rgba(239, 68, 68, 0.3); }
+  </style>
+</head>
+<body>
+  <div id="overlay"></div>
+  <div id="status">Connecting...</div>
+
+  <script>
+    const overlay = document.getElementById('overlay');
+    const status = document.getElementById('status');
+    const queue = [];
+    let showing = false;
+
+    // Get overlay token from URL
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    function getInitial(name) {
+      return (name || '?')[0].toUpperCase();
+    }
+
+    function formatAmount(amount) {
+      if (typeof amount === 'number') {
+        return 'Rp' + amount.toLocaleString('id-ID');
+      }
+      if (typeof amount === 'string' && !amount.startsWith('Rp')) {
+        return 'Rp' + amount;
+      }
+      return amount || 'Rp0';
+    }
+
+    function showDonation(donation) {
+      showing = true;
+
+      const el = document.createElement('div');
+      el.className = 'donation-alert';
+      el.innerHTML = `
+        <div class="alert-card">
+          <div class="alert-header">
+            <div class="alert-avatar">${getInitial(donation.donator)}</div>
+            <div class="alert-info">
+              <div class="alert-name">${donation.donator || 'Anonymous'}</div>
+              <div class="alert-amount">${formatAmount(donation.amount)}</div>
+            </div>
+          </div>
+          ${donation.message ? `<div class="alert-message">${donation.message}</div>` : ''}
+          <div class="alert-glow"></div>
+        </div>
+      `;
+
+      overlay.appendChild(el);
+
+      // Remove after 6 seconds
+      setTimeout(() => {
+        el.classList.add('exit');
+        setTimeout(() => {
+          el.remove();
+          showing = false;
+          if (queue.length > 0) {
+            showDonation(queue.shift());
+          }
+        }, 400);
+      }, 6000);
+    }
+
+    function queueDonation(donation) {
+      if (showing) {
+        queue.push(donation);
+      } else {
+        showDonation(donation);
+      }
+    }
+
+    // WebSocket connection
+    function connect() {
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${location.host}`;
+      const ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        status.textContent = 'Connected';
+        status.className = 'connected';
+        // Register as overlay client with token
+        ws.send(JSON.stringify({ type: 'overlay', token: token }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'donation') {
+            queueDonation(data.donation);
+          }
+        } catch (e) {}
+      };
+
+      ws.onclose = () => {
+        status.textContent = 'Disconnected — reconnecting...';
+        status.className = 'disconnected';
+        setTimeout(connect, 3000);
+      };
+
+      ws.onerror = () => ws.close();
+    }
+
+    connect();
+  </script>
+</body>
+</html>
