@@ -1,12 +1,5 @@
 /**
  * StreamGuard — Main Server (v0.2 - Multi-user + Database)
- * 
- * Changes from v0.1:
- *   - PostgreSQL database for persistent storage
- *   - Multi-user: each streamer gets unique webhook + overlay URLs
- *   - Auth endpoints (register/login)
- *   - Per-user custom blocklist
- *   - Per-user donation history
  */
 
 require("dotenv").config();
@@ -14,13 +7,20 @@ const express = require("express");
 const http = require("http");
 const { WebSocketServer } = require("ws");
 const path = require("path");
+const fs = require("fs");
 
-const SaweriaProvider = require("./providers/saweria");
-const TrakteerProvider = require("./providers/trakteer");
 const { filterMessage } = require("./filters/judolFilter");
 const UserModel = require("./db/userModel");
 const DonationModel = require("./db/donationModel");
 const BlocklistModel = require("./db/blocklistModel");
+const authMiddleware = require("./middleware/auth");
+
+// Routes
+const authRoutes = require("./routes/auth");
+const webhookRoutes = require("./routes/webhooks");
+const donationRoutes = require("./routes/donations");
+const blocklistRoutes = require("./routes/blocklist");
+const settingsRoutes = require("./routes/settings");
 
 // ══════════════════════════════════════════
 // CONFIG
@@ -38,7 +38,7 @@ const server = http.createServer(app);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// Serve built dashboard (after: cd dashboard && npm run build)
+// Serve built dashboard
 const dashboardDist = path.join(__dirname, "dashboard", "dist");
 app.use(express.static(dashboardDist));
 
@@ -107,10 +107,8 @@ function broadcastToOverlay(overlayToken, donation) {
 // ══════════════════════════════════════════
 
 async function processDonation(user, donation) {
-  // Get user's custom blocklist
   const customBlocklist = await BlocklistModel.getWords(user.id);
 
-  // Run through NLP filter (skip if user disabled filter)
   let filterResult;
   if (user.filter_enabled) {
     filterResult = filterMessage(donation.message, customBlocklist);
@@ -118,158 +116,33 @@ async function processDonation(user, donation) {
     filterResult = { blocked: false, reason: "filter disabled", confidence: 1.0, layer: "none" };
   }
 
-  // Save to database
   await DonationModel.save(user.id, donation, filterResult);
 
   if (filterResult.blocked) {
-    console.log(`[BLOCKED] [${user.username || user.email}] "${donation.message}" \u2192 ${filterResult.reason}`);
+    console.log(`[BLOCKED] [${user.username || user.email}] "${donation.message}" → ${filterResult.reason}`);
   } else {
-    console.log(`[PASSED] [${user.username || user.email}] "${donation.message}" \u2192 clean`);
+    console.log(`[PASSED] [${user.username || user.email}] "${donation.message}" → clean`);
     broadcastToOverlay(user.overlay_token, donation);
   }
 
   return filterResult;
 }
 
-// ══════════════════════════════════════════
-// AUTH ROUTES
-// ══════════════════════════════════════════
-
-app.post("/api/auth/register", async (req, res) => {
-  try {
-    const { email, password, username } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password required" });
-    }
-    if (password.length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters" });
-    }
-
-    const user = await UserModel.register(email, password, username);
-
-    res.status(201).json({
-      message: "Registration successful",
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        webhook_url: `/webhook/saweria/${user.webhook_token}`,
-        overlay_url: `/overlay?token=${user.overlay_token}`,
-      },
-    });
-  } catch (err) {
-    if (err.code === "23505") {
-      return res.status(409).json({ error: "Email already registered" });
-    }
-    console.error("[Auth] Register error:", err.message);
-    res.status(500).json({ error: "Registration failed" });
-  }
-});
-
-app.post("/api/auth/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password required" });
-    }
-
-    const user = await UserModel.login(email, password);
-    if (!user) {
-      return res.status(401).json({ error: "Invalid email or password" });
-    }
-
-    res.json({
-      message: "Login successful",
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        webhook_token: user.webhook_token,
-        overlay_token: user.overlay_token,
-        filter_enabled: user.filter_enabled,
-        webhook_url: `/webhook/saweria/${user.webhook_token}`,
-        overlay_url: `/overlay?token=${user.overlay_token}`,
-      },
-    });
-  } catch (err) {
-    console.error("[Auth] Login error:", err.message);
-    res.status(500).json({ error: "Login failed" });
-  }
-});
+// Share functions with routes via app.locals
+app.locals.processDonation = processDonation;
+app.locals.broadcastToOverlay = broadcastToOverlay;
 
 // ══════════════════════════════════════════
-// WEBHOOK ROUTES (multi-user)
+// MOUNT ROUTES
 // ══════════════════════════════════════════
 
-const saweria = new SaweriaProvider("");
-const trakteer = new TrakteerProvider();
+app.use("/api/auth", authRoutes);
+app.use("/webhook", webhookRoutes);
+app.use("/api/donations", donationRoutes);
+app.use("/api/blocklist", blocklistRoutes);
+app.use("/api/settings", settingsRoutes);
 
-app.post("/webhook/saweria/:webhookToken", async (req, res) => {
-  try {
-    const user = await UserModel.findByWebhookToken(req.params.webhookToken);
-    if (!user) {
-      return res.status(404).json({ error: "Invalid webhook token" });
-    }
-
-    const donation = saweria.parseDonation(req.body);
-    console.log(`[Saweria] ${user.username || user.email}: ${donation.donator} - Rp${donation.amountDisplay} - "${donation.message}"`);
-
-    await processDonation(user, donation);
-    res.status(200).json({ status: "received" });
-  } catch (err) {
-    console.error("[Webhook] Error:", err.message);
-    res.status(500).json({ error: "Processing failed" });
-  }
-});
-
-// Trakteer webhook
-app.post("/webhook/trakteer/:webhookToken", async (req, res) => {
-  try {
-    const user = await UserModel.findByWebhookToken(req.params.webhookToken);
-    if (!user) {
-      return res.status(404).json({ error: "Invalid webhook token" });
-    }
-
-    const donation = trakteer.parseDonation(req.body);
-    console.log(`[Trakteer] ${user.username || user.email}: ${donation.donator} - Rp${donation.amountDisplay} - "${donation.message}"`);
-
-    await processDonation(user, donation);
-    res.status(200).json({ status: "received" });
-  } catch (err) {
-    console.error("[Webhook] Error:", err.message);
-    res.status(500).json({ error: "Processing failed" });
-  }
-});
-
-// ══════════════════════════════════════════
-// OVERLAY ROUTE
-// ══════════════════════════════════════════
-
-app.get("/overlay", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "overlay.html"));
-});
-
-// ══════════════════════════════════════════
-// API ROUTES (per-user)
-// ══════════════════════════════════════════
-
-// Simple auth middleware (production: use JWT)
-async function authMiddleware(req, res, next) {
-  const userId = req.headers["x-user-id"];
-  if (!userId) {
-    return res.status(401).json({ error: "Not authenticated. Send x-user-id header." });
-  }
-  const user = await UserModel.findById(parseInt(userId));
-  if (!user) {
-    return res.status(401).json({ error: "User not found" });
-  }
-  req.user = user;
-  next();
-}
-
-// My info + stats
+// /api/me
 app.get("/api/me", authMiddleware, async (req, res) => {
   const stats = await DonationModel.getStats(req.user.id);
   res.json({
@@ -287,73 +160,17 @@ app.get("/api/me", authMiddleware, async (req, res) => {
   });
 });
 
-// Donations
-app.get("/api/donations", authMiddleware, async (req, res) => {
-  const donations = await DonationModel.getAll(req.user.id);
-  res.json({ donations });
+// Overlay
+app.get("/overlay", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "overlay.html"));
 });
 
-app.get("/api/donations/blocked", authMiddleware, async (req, res) => {
-  const donations = await DonationModel.getBlocked(req.user.id);
-  res.json({ donations });
-});
-
-app.get("/api/donations/passed", authMiddleware, async (req, res) => {
-  const donations = await DonationModel.getPassed(req.user.id);
-  res.json({ donations });
-});
-
-// Approve blocked donation
-app.post("/api/donations/:id/approve", authMiddleware, async (req, res) => {
-  const donation = await DonationModel.approve(req.params.id, req.user.id);
-  if (!donation) {
-    return res.status(404).json({ error: "Donation not found" });
-  }
-  broadcastToOverlay(req.user.overlay_token, {
-    donator: donation.donator_name,
-    amount: donation.amount,
-    amountDisplay: donation.amount,
-    message: donation.message,
-    provider: donation.provider,
-  });
-  res.json({ message: "Donation approved and sent to overlay", donation });
-});
-
-// Filter toggle
-app.post("/api/settings/filter", authMiddleware, async (req, res) => {
-  const { enabled } = req.body;
-  await UserModel.toggleFilter(req.user.id, enabled);
-  res.json({ filter_enabled: enabled });
-});
-
-// Blocklist CRUD
-app.get("/api/blocklist", authMiddleware, async (req, res) => {
-  const words = await BlocklistModel.getWords(req.user.id);
-  res.json({ words });
-});
-
-app.post("/api/blocklist", authMiddleware, async (req, res) => {
-  const { word } = req.body;
-  if (!word) return res.status(400).json({ error: "Word required" });
-  await BlocklistModel.addWord(req.user.id, word);
-  const words = await BlocklistModel.getWords(req.user.id);
-  res.json({ words });
-});
-
-app.delete("/api/blocklist/:word", authMiddleware, async (req, res) => {
-  await BlocklistModel.removeWord(req.user.id, req.params.word);
-  const words = await BlocklistModel.getWords(req.user.id);
-  res.json({ words });
-});
-
-// ══════════════════════════════════════════
-// HEALTH + TEST
-// ══════════════════════════════════════════
-
+// Health
 app.get("/health", (req, res) => {
   res.json({ status: "ok", version: "0.2.0", overlayConnections: overlayClients.size });
 });
 
+// Test donation
 app.post("/test/donation/:webhookToken", async (req, res) => {
   try {
     const user = await UserModel.findByWebhookToken(req.params.webhookToken);
@@ -381,12 +198,10 @@ app.post("/test/donation/:webhookToken", async (req, res) => {
 });
 
 // ══════════════════════════════════════════
-// START
+// SPA CATCH-ALL + START
 // ══════════════════════════════════════════
 
-// SPA catch-all — serve dashboard for non-API routes
-const fs = require("fs");
-const dashIndexPath = path.join(__dirname, "dashboard", "dist", "index.html");
+const dashIndexPath = path.join(dashboardDist, "index.html");
 app.get("*", (req, res) => {
   if (fs.existsSync(dashIndexPath)) {
     res.sendFile(dashIndexPath);

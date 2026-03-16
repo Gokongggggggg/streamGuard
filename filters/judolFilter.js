@@ -72,27 +72,32 @@ function normalizeText(text) {
 // ══════════════════════════════════════════
 
 // Gambling-related keywords (Indonesian context)
-const JUDOL_KEYWORDS = [
-  // Direct gambling terms
-  "slot", "gacor", "maxwin", "scatter", "jackpot",
+// HIGH confidence — these are almost always gambling spam
+const JUDOL_KEYWORDS_HIGH = [
+  "gacor", "maxwin", "scatter", "jackpot",
   "togel", "judol", "judi online", "judi slot",
-  "casino", "poker online", "baccarat", "roulette",
-
-  // Promotional terms commonly used
-  "deposit", "withdraw", "bonus new member",
-  "freebet", "freechip", "turnover",
+  "poker online", "baccarat", "roulette",
+  "freebet", "freechip",
   "rtp live", "rtp slot", "bocoran slot",
   "pola slot", "pola gacor", "jam gacor",
   "anti rungkad", "auto maxwin",
+  "link alternatif",
+  "bonus new member",
+  "pinjol", "pinjaman online",
+  "tanpa bi checking",
+];
 
-  // Common site patterns
-  "daftar sekarang", "link alternatif",
+// MEDIUM confidence — only flag when combined with other signals
+const JUDOL_KEYWORDS_CONTEXT = [
+  "slot",     // could be "time slot" in normal context
+  "casino",
+  "deposit",  // could be normal banking
+  "withdraw", // could be normal banking
+  "turnover",
   "minimal deposit", "min depo",
-  "whatsapp", // often used with gambling promos
-
-  // Pinjol (illegal lending) — bonus detection
-  "pinjol", "pinjaman online", "cair cepat",
-  "tanpa jaminan", "tanpa bi checking",
+  "daftar sekarang",
+  "cair cepat",
+  "tanpa jaminan",
 ];
 
 // Regex patterns for harder-to-catch variants
@@ -110,7 +115,6 @@ const JUDOL_PATTERNS = [
 ];
 
 function checkKeywords(textVariants) {
-  // Check against all normalized variants
   const textsToCheck = [
     textVariants.normalized,
     textVariants.noSpaces,
@@ -118,13 +122,30 @@ function checkKeywords(textVariants) {
     textVariants.deduped,
   ];
 
-  for (const keyword of JUDOL_KEYWORDS) {
+  // Check high-confidence keywords first
+  for (const keyword of JUDOL_KEYWORDS_HIGH) {
     for (const text of textsToCheck) {
       if (text.includes(keyword.toLowerCase())) {
-        return { matched: true, keyword, matchedIn: text };
+        return { matched: true, keyword, confidence: 0.95, matchedIn: text };
       }
     }
   }
+
+  // Check context-dependent keywords — need at least 2 matches to block
+  const contextMatches = [];
+  for (const keyword of JUDOL_KEYWORDS_CONTEXT) {
+    for (const text of textsToCheck) {
+      if (text.includes(keyword.toLowerCase())) {
+        contextMatches.push(keyword);
+        break; // found in at least one variant, move to next keyword
+      }
+    }
+  }
+
+  if (contextMatches.length >= 2) {
+    return { matched: true, keyword: contextMatches.join(" + "), confidence: 0.8, matchedIn: textsToCheck[0] };
+  }
+
   return { matched: false };
 }
 
@@ -187,7 +208,7 @@ function filterMessage(message, customBlocklist = []) {
     return {
       blocked: true,
       reason: `Keyword match: "${keywordResult.keyword}"`,
-      confidence: 0.9,
+      confidence: keywordResult.confidence,
       layer: "keyword",
     };
   }

@@ -70,32 +70,6 @@ class SaweriaProvider {
     };
   }
 
-  /**
-   * Express middleware for handling Saweria webhook
-   */
-  createWebhookHandler(onDonation) {
-    return (req, res) => {
-      const signature = req.headers["saweria-callback-signature"];
-
-      // Verify signature (skip in dev if needed)
-      if (this.streamKey && signature) {
-        if (!this.verifySignature(req.body, signature)) {
-          console.log("[Saweria] Invalid webhook signature — rejected");
-          return res.status(401).json({ error: "Invalid signature" });
-        }
-      }
-
-      // Parse the donation
-      const donation = this.parseDonation(req.body);
-      console.log(`[Saweria] Donation received: ${donation.donator} - Rp${donation.amountDisplay} - "${donation.message}"`);
-
-      // Pass to callback
-      onDonation(donation);
-
-      // Always respond 200 so Saweria knows we received it
-      res.status(200).json({ status: "received" });
-    };
-  }
 }
 
 module.exports = SaweriaProvider;
