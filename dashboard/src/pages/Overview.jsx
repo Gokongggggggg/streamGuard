@@ -22,7 +22,7 @@ export default function PageOverview({ user, stats, baseUrl }) {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
-        <Card>
+        <Card style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <span style={{
               width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
@@ -37,7 +37,7 @@ export default function PageOverview({ user, stats, baseUrl }) {
           <CopyField label="Trakteer" value={`${baseUrl}/webhook/trakteer/${user.webhook_token}`} />
         </Card>
 
-        <Card>
+        <Card style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <span style={{
               width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",

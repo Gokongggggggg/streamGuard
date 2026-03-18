@@ -78,9 +78,9 @@ export function CopyField({ label, value }) {
   };
   return (
     <Field label={label}>
-      <div style={{ display: "flex", gap: 8 }}>
+      <div style={{ display: "flex", gap: 8, minWidth: 0 }}>
         <div style={{
-          flex: 1, padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`,
+          flex: 1, minWidth: 0, padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`,
           background: T.bg, color: T.accent, fontSize: 12, fontFamily: "'DM Mono', monospace",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>{value}</div>
