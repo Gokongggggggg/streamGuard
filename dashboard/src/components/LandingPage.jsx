@@ -4,7 +4,19 @@ import { Badge, Card, Btn } from "./ui";
 export default function LandingPage({ onGetStarted }) {
   return (
     <div style={{ background: T.bg, color: T.text, minHeight: "100vh" }}>
-      <nav style={{
+      <style>{`
+        @media (max-width: 768px) {
+          .sg-hero h1 { font-size: 32px !important; }
+          .sg-hero p { font-size: 15px !important; }
+          .sg-hero-btns { flex-direction: column !important; }
+          .sg-grid-3 { grid-template-columns: 1fr !important; }
+          .sg-grid-2 { grid-template-columns: 1fr !important; }
+          .sg-section { padding: 40px 20px !important; }
+          .sg-landing-nav { padding: 16px 20px !important; }
+        }
+      `}</style>
+
+      <nav className="sg-landing-nav" style={{
         display: "flex", justifyContent: "space-between", alignItems: "center",
         padding: "20px 40px", maxWidth: 1100, margin: "0 auto",
       }}>
@@ -16,7 +28,7 @@ export default function LandingPage({ onGetStarted }) {
         </Btn>
       </nav>
 
-      <section style={{
+      <section className="sg-section sg-hero" style={{
         textAlign: "center", padding: "80px 40px 60px",
         maxWidth: 800, margin: "0 auto",
         background: `radial-gradient(ellipse at 50% 0%, ${T.accentDim} 0%, transparent 60%)`,
@@ -34,7 +46,7 @@ export default function LandingPage({ onGetStarted }) {
         <p style={{ fontSize: 18, color: T.textDim, lineHeight: 1.6, maxWidth: 560, margin: "0 auto 36px" }}>
           StreamGuard otomatis filter pesan donasi dari promosi judi online, pinjol ilegal, dan spam lainnya. Viewer kamu tetap bisa donasi lewat Saweria seperti biasa.
         </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+        <div className="sg-hero-btns" style={{ display: "flex", gap: 12, justifyContent: "center" }}>
           <Btn onClick={onGetStarted} style={{ padding: "14px 32px", fontSize: 16, borderRadius: 10 }}>
             Mulai Gratis
           </Btn>
@@ -46,14 +58,14 @@ export default function LandingPage({ onGetStarted }) {
         </div>
       </section>
 
-      <section style={{ padding: "60px 40px", maxWidth: 900, margin: "0 auto" }}>
+      <section className="sg-section" style={{ padding: "60px 40px", maxWidth: 900, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12, letterSpacing: -1 }}>Masalahnya</h2>
           <p style={{ color: T.textDim, fontSize: 16, maxWidth: 600, margin: "0 auto" }}>
             Promotor judi online memanfaatkan donasi sebagai media iklan murah di stream kamu
           </p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+        <div className="sg-grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
           {[
             { icon: "💸", title: "Donasi = Iklan Judol", desc: "Cukup Rp5.000, pesan promosi judi langsung muncul di layar stream kamu dan ditonton ribuan viewer." },
             { icon: "🔤", title: "Filter Bawaan Mudah Dibypass", desc: "Spammer pakai trik seperti sl0t g4c0r, s.l.o.t, atau karakter khusus untuk lolos dari filter kata sederhana." },
@@ -68,7 +80,7 @@ export default function LandingPage({ onGetStarted }) {
         </div>
       </section>
 
-      <section style={{ padding: "60px 40px", background: `linear-gradient(180deg, transparent 0%, ${T.accentDim} 50%, transparent 100%)` }}>
+      <section className="sg-section" style={{ padding: "60px 40px", background: `linear-gradient(180deg, transparent 0%, ${T.accentDim} 50%, transparent 100%)` }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12, letterSpacing: -1 }}>Solusinya</h2>
@@ -76,7 +88,7 @@ export default function LandingPage({ onGetStarted }) {
               StreamGuard pakai NLP untuk deteksi spam yang lolos filter biasa
             </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div className="sg-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             {[
               { icon: "🧠", title: "Filter NLP Berlapis", desc: "Normalisasi teks, keyword matching, regex pattern, dan klasifikasi ML." },
               { icon: "⚡", title: "Real-time < 500ms", desc: "Donasi difilter dan diteruskan ke OBS dalam hitungan milidetik." },
@@ -93,7 +105,7 @@ export default function LandingPage({ onGetStarted }) {
         </div>
       </section>
 
-      <section id="how-it-works" style={{ padding: "60px 40px", maxWidth: 900, margin: "0 auto" }}>
+      <section id="how-it-works" className="sg-section" style={{ padding: "60px 40px", maxWidth: 900, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12, letterSpacing: -1 }}>Cara Kerja</h2>
           <p style={{ color: T.textDim, fontSize: 16 }}>Setup 5 menit, proteksi selamanya</p>
@@ -124,7 +136,7 @@ export default function LandingPage({ onGetStarted }) {
         </div>
       </section>
 
-      <section style={{ padding: "60px 40px", maxWidth: 700, margin: "0 auto" }}>
+      <section className="sg-section" style={{ padding: "60px 40px", maxWidth: 700, margin: "0 auto" }}>
         <Card glow={T.danger + "33"} style={{ padding: 32 }}>
           <div style={{ textAlign: "center", marginBottom: 20 }}>
             <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Contoh Filter</h3>
@@ -141,9 +153,10 @@ export default function LandingPage({ onGetStarted }) {
                 display: "flex", justifyContent: "space-between", alignItems: "center",
                 padding: "12px 16px", borderRadius: 8,
                 background: T.dangerDim, border: `1px solid ${T.danger}22`,
+                gap: 12,
               }}>
-                <div>
-                  <div style={{ fontSize: 13, color: T.text, marginBottom: 2 }}>"{item.msg}"</div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, color: T.text, marginBottom: 2, wordBreak: "break-word" }}>"{item.msg}"</div>
                   <div style={{ fontSize: 11, color: T.danger }}>{item.reason}</div>
                 </div>
                 <Badge color="danger">BLOCKED</Badge>
@@ -153,11 +166,11 @@ export default function LandingPage({ onGetStarted }) {
         </Card>
       </section>
 
-      <section style={{ padding: "60px 40px", maxWidth: 700, margin: "0 auto" }}>
+      <section className="sg-section" style={{ padding: "60px 40px", maxWidth: 700, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <h2 style={{ fontSize: 32, fontWeight: 700, letterSpacing: -1 }}>Harga</h2>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div className="sg-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <Card style={{ padding: 28, textAlign: "center" }}>
             <div style={{ fontSize: 13, color: T.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Free</div>
             <div style={{ fontSize: 36, fontWeight: 800, marginBottom: 4 }}>Rp0</div>
@@ -177,7 +190,7 @@ export default function LandingPage({ onGetStarted }) {
         </div>
       </section>
 
-      <section style={{
+      <section className="sg-section" style={{
         padding: "80px 40px", textAlign: "center",
         background: `radial-gradient(ellipse at 50% 100%, ${T.accentDim} 0%, transparent 60%)`,
       }}>
@@ -190,7 +203,7 @@ export default function LandingPage({ onGetStarted }) {
         </Btn>
       </section>
 
-      <footer style={{
+      <footer className="sg-landing-nav" style={{
         padding: "24px 40px", borderTop: `1px solid ${T.border}`,
         display: "flex", justifyContent: "space-between", alignItems: "center",
         maxWidth: 1100, margin: "0 auto",

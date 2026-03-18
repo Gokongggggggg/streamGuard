@@ -1,6 +1,35 @@
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import T from "../lib/theme";
 
+// ══════════════════════════════════════════
+// GLOBAL HOVER & FOCUS STYLES
+// ══════════════════════════════════════════
+
+const globalStyleId = "sg-global-styles";
+if (typeof document !== "undefined" && !document.getElementById(globalStyleId)) {
+  const style = document.createElement("style");
+  style.id = globalStyleId;
+  style.textContent = `
+    @keyframes sg-spin { to { transform: rotate(360deg); } }
+    @keyframes sg-toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .sg-btn { transition: all 0.15s !important; }
+    .sg-btn:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
+    .sg-btn:active:not(:disabled) { transform: translateY(0); }
+    .sg-btn-ghost:hover:not(:disabled) { background: ${T.surfaceHover} !important; }
+    .sg-btn-outline:hover:not(:disabled) { background: ${T.accentDim} !important; }
+    .sg-card { transition: border-color 0.15s, box-shadow 0.15s; }
+    .sg-card:hover { border-color: ${T.border}88; }
+    .sg-input:focus { border-color: ${T.accent} !important; box-shadow: 0 0 0 2px ${T.accentDim}; }
+    .sg-nav-btn { transition: all 0.12s !important; }
+    .sg-nav-btn:hover { background: ${T.surfaceHover} !important; }
+  `;
+  document.head.appendChild(style);
+}
+
+// ══════════════════════════════════════════
+// COMPONENTS
+// ══════════════════════════════════════════
+
 export function Badge({ children, color = "accent" }) {
   const c = {
     accent: { bg: T.accentDim, fg: T.accent },
@@ -19,7 +48,7 @@ export function Badge({ children, color = "accent" }) {
 
 export function Card({ children, style, glow }) {
   return (
-    <div style={{
+    <div className="sg-card" style={{
       background: T.surface, border: `1px solid ${glow || T.border}`,
       borderRadius: 12, padding: 24,
       ...(glow ? { boxShadow: `0 0 20px ${glow}15` } : {}),
@@ -36,13 +65,14 @@ export function Btn({ children, onClick, v = "primary", disabled, style }) {
     outline: { bg: "transparent", fg: T.accent },
   };
   const s = vars[v];
+  const className = `sg-btn ${v === "ghost" ? "sg-btn-ghost" : v === "outline" ? "sg-btn-outline" : ""}`;
   return (
-    <button disabled={disabled} onClick={onClick} style={{
+    <button disabled={disabled} onClick={onClick} className={className} style={{
       padding: "10px 20px", borderRadius: 8,
       border: v === "outline" ? `1px solid ${T.accent}44` : "none",
       background: disabled ? T.textMuted : s.bg, color: disabled ? T.textDim : s.fg,
       fontWeight: 600, fontSize: 14, cursor: disabled ? "not-allowed" : "pointer",
-      transition: "all 0.15s", fontFamily: "inherit", ...style,
+      fontFamily: "inherit", ...style,
     }}>{children}</button>
   );
 }
@@ -59,12 +89,35 @@ export function Field({ label, children }) {
 export function TextInput({ label, ...props }) {
   return (
     <Field label={label}>
-      <input {...props} style={{
+      <input {...props} className={`sg-input ${props.className || ""}`} style={{
         width: "100%", padding: "10px 14px", borderRadius: 8,
         border: `1px solid ${T.border}`, background: T.bg, color: T.text,
         fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+        transition: "border-color 0.15s, box-shadow 0.15s",
         ...props.style,
       }} />
+    </Field>
+  );
+}
+
+export function PasswordInput({ label, ...props }) {
+  const [show, setShow] = useState(false);
+  return (
+    <Field label={label}>
+      <div style={{ position: "relative" }}>
+        <input {...props} type={show ? "text" : "password"} className={`sg-input ${props.className || ""}`} style={{
+          width: "100%", padding: "10px 14px", paddingRight: 44, borderRadius: 8,
+          border: `1px solid ${T.border}`, background: T.bg, color: T.text,
+          fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+          transition: "border-color 0.15s, box-shadow 0.15s",
+          ...props.style,
+        }} />
+        <button type="button" onClick={() => setShow(!show)} style={{
+          position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+          background: "none", border: "none", color: T.textMuted, cursor: "pointer",
+          fontSize: 13, fontFamily: "inherit", padding: "4px 6px",
+        }}>{show ? "Hide" : "Show"}</button>
+      </div>
     </Field>
   );
 }
@@ -85,14 +138,14 @@ export function CopyField({ label, value }) {
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>{value}</div>
         <Btn onClick={copy} v="outline" style={{ flexShrink: 0, fontSize: 12, padding: "8px 14px" }}>
-          {copied ? "✓" : "Copy"}
+          {copied ? "✓ Copied" : "Copy"}
         </Btn>
       </div>
     </Field>
   );
 }
 
-export function Stat({ label, value, color = T.accent }) {
+export function Stat({ label, value, color = T.accent, sub }) {
   return (
     <div style={{
       padding: 20, borderRadius: 10, border: `1px solid ${T.border}`,
@@ -100,6 +153,7 @@ export function Stat({ label, value, color = T.accent }) {
     }}>
       <div style={{ fontSize: 32, fontWeight: 700, color, letterSpacing: -1 }}>{value}</div>
       <div style={{ fontSize: 12, color: T.textDim, marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>{label}</div>
+      {sub && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{sub}</div>}
     </div>
   );
 }
@@ -125,9 +179,7 @@ export function Spinner({ size = 20, color = T.accent }) {
       width: size, height: size, border: `2px solid ${T.border}`,
       borderTop: `2px solid ${color}`, borderRadius: "50%",
       animation: "sg-spin 0.6s linear infinite", display: "inline-block",
-    }}>
-      <style>{`@keyframes sg-spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
+    }} />
   );
 }
 
@@ -137,6 +189,36 @@ export function LoadingState({ message = "Loading..." }) {
       <Spinner size={28} />
       <div style={{ marginTop: 12, fontSize: 14 }}>{message}</div>
     </div>
+  );
+}
+
+export function SearchInput({ value, onChange, placeholder = "Search..." }) {
+  return (
+    <div style={{ position: "relative" }}>
+      <span style={{
+        position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
+        color: T.textMuted, fontSize: 14, pointerEvents: "none",
+      }}>&#x2315;</span>
+      <input value={value} onChange={onChange} placeholder={placeholder}
+        className="sg-input"
+        style={{
+          width: "100%", padding: "9px 14px 9px 32px", borderRadius: 8,
+          border: `1px solid ${T.border}`, background: T.bg, color: T.text,
+          fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+          transition: "border-color 0.15s, box-shadow 0.15s",
+        }} />
+    </div>
+  );
+}
+
+export function EmptyState({ icon = "📭", title, description, action, onAction }) {
+  return (
+    <Card style={{ textAlign: "center", padding: 48 }}>
+      <div style={{ fontSize: 36, marginBottom: 8 }}>{icon}</div>
+      <div style={{ color: T.textDim, fontSize: 15, marginBottom: 4 }}>{title}</div>
+      {description && <div style={{ color: T.textMuted, fontSize: 13, marginBottom: action ? 16 : 0 }}>{description}</div>}
+      {action && onAction && <Btn onClick={onAction} v="outline" style={{ fontSize: 13 }}>{action}</Btn>}
+    </Card>
   );
 }
 
@@ -184,7 +266,6 @@ export function ToastProvider({ children }) {
               minWidth: 200, maxWidth: 360,
             }}>
               {t.message}
-              <style>{`@keyframes sg-toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
             </div>
           );
         })}

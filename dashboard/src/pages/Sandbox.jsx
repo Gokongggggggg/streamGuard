@@ -48,7 +48,8 @@ export default function PageSandbox({ user }) {
         Test the filter without real donations. See what gets blocked and what passes.
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <style>{`@media (max-width: 900px) { .sg-sandbox-grid { grid-template-columns: 1fr !important; } }`}</style>
+      <div className="sg-sandbox-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
         <div>
           <Card>
             <div style={{ fontWeight: 600, marginBottom: 16 }}>Send Test Donation</div>
@@ -59,11 +60,13 @@ export default function PageSandbox({ user }) {
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
                 placeholder="Type donation message to test..."
                 rows={3}
+                className="sg-input"
                 style={{
                   width: "100%", padding: "10px 14px", borderRadius: 8,
                   border: `1px solid ${T.border}`, background: T.bg, color: T.text,
                   fontSize: 14, fontFamily: "inherit", outline: "none",
                   resize: "vertical", boxSizing: "border-box",
+                  transition: "border-color 0.15s, box-shadow 0.15s",
                 }} />
             </Field>
             <Btn onClick={send} style={{ width: "100%" }}>Send Test</Btn>

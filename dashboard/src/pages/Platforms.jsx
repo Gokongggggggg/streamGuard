@@ -35,7 +35,7 @@ export default function PagePlatforms({ user, baseUrl }) {
         ))}
       </div>
 
-      <Card glow="#E91E6333" style={{ marginTop: 16 }}>
+      <Card glow="#E91E6333" style={{ marginTop: 16, marginBottom: 16 }}>
         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, color: "#E91E63" }}>Panduan Setup Trakteer</h3>
         <CopyField label="1. Webhook URL" value={`${baseUrl}/webhook/trakteer/${user.webhook_token}`} />
         <CopyField label="2. Overlay URL (sama seperti Saweria)" value={`${baseUrl}/overlay?token=${user.overlay_token}`} />

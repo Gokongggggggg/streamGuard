@@ -82,14 +82,14 @@ export default function Dashboard({ user: init, onLogout }) {
 
         <nav style={{ flex: 1 }}>
           {nav.map(n => (
-            <button key={n.id} onClick={() => changePage(n.id)} style={{
+            <button key={n.id} onClick={() => changePage(n.id)} className="sg-nav-btn" style={{
               display: "flex", alignItems: "center", gap: 10, width: "100%",
               padding: "11px 20px", border: "none", cursor: "pointer", fontFamily: "inherit",
               background: page === n.id ? T.accentDim : "transparent",
               color: page === n.id ? T.accent : T.textDim,
               borderLeft: `2px solid ${page === n.id ? T.accent : "transparent"}`,
               fontSize: 14, fontWeight: page === n.id ? 600 : 400,
-              transition: "all 0.12s", textAlign: "left",
+              textAlign: "left",
             }}>
               <span style={{ fontSize: 15, width: 18 }}>{n.icon}</span>
               {n.label}

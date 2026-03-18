@@ -2,6 +2,10 @@ import T from "../lib/theme";
 import { Card, CopyField, Stat } from "../components/ui";
 
 export default function PageOverview({ user, stats, baseUrl }) {
+  const total = parseInt(stats.total) || 0;
+  const blocked = parseInt(stats.blocked) || 0;
+  const blockRate = total > 0 ? ((blocked / total) * 100).toFixed(1) : "0";
+
   return (
     <div>
       <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>
@@ -14,7 +18,7 @@ export default function PageOverview({ user, stats, baseUrl }) {
       <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
         <Stat label="Total" value={stats.total} />
         <Stat label="Passed" value={stats.passed} color={T.success} />
-        <Stat label="Blocked" value={stats.blocked} color={T.danger} />
+        <Stat label="Blocked" value={stats.blocked} color={T.danger} sub={`${blockRate}% block rate`} />
       </div>
 
       <div style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>

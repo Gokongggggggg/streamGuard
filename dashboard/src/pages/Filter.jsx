@@ -64,7 +64,7 @@ export default function PageFilter({ user, onUserUpdate }) {
       <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 20 }}>Filter Settings</h2>
 
       <Card style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: filterOn ? 16 : 0 }}>
           <div>
             <div style={{ fontWeight: 600, marginBottom: 4 }}>NLP Judol Filter</div>
             <div style={{ fontSize: 13, color: T.textDim }}>
@@ -73,6 +73,26 @@ export default function PageFilter({ user, onUserUpdate }) {
           </div>
           <Toggle on={filterOn} onToggle={toggle} />
         </div>
+        {filterOn && (
+          <div style={{
+            display: "flex", gap: 12, flexWrap: "wrap",
+          }}>
+            {[
+              { label: "High-confidence keywords", count: 27, color: T.danger },
+              { label: "Context keywords", count: 10, color: T.warning },
+              { label: "Regex patterns", count: 10, color: T.accent },
+            ].map((item, i) => (
+              <div key={i} style={{
+                padding: "8px 14px", borderRadius: 8, fontSize: 12,
+                background: T.bg, border: `1px solid ${T.border}`,
+                display: "flex", alignItems: "center", gap: 8,
+              }}>
+                <span style={{ fontWeight: 700, color: item.color }}>{item.count}</span>
+                <span style={{ color: T.textDim }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       <Card>
@@ -86,9 +106,11 @@ export default function PageFilter({ user, onUserUpdate }) {
             onKeyDown={e => e.key === "Enter" && add()}
             placeholder="Add word to block..."
             maxLength={MAX_WORD_LENGTH}
+            className="sg-input"
             style={{
               flex: 1, padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`,
               background: T.bg, color: T.text, fontSize: 14, fontFamily: "inherit", outline: "none",
+              transition: "border-color 0.15s, box-shadow 0.15s",
             }} />
           <Btn onClick={add}>Add</Btn>
         </div>

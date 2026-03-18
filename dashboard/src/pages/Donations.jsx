@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import T from "../lib/theme";
 import { api } from "../lib/api";
-import { Badge, Card, Btn, LoadingState, useToast } from "../components/ui";
+import { Badge, Card, Btn, LoadingState, SearchInput, EmptyState, useToast } from "../components/ui";
 
 const FILTERS = [["all", "All"], ["passed", "Passed"], ["blocked", "Blocked"]];
 const PAGE_SIZE = 20;
@@ -16,6 +16,7 @@ export default function PageDonations() {
   const [lastRefresh, setLastRefresh] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [search, setSearch] = useState("");
   const toast = useToast();
   const intervalRef = useRef(null);
 
@@ -112,7 +113,14 @@ export default function PageDonations() {
     });
   };
 
-  const blockedOnPage = donations.filter(d => d.blocked && !d.manually_approved);
+  const searchLower = search.toLowerCase();
+  const filtered = search
+    ? donations.filter(d =>
+        (d.donator_name || "").toLowerCase().includes(searchLower) ||
+        (d.message || "").toLowerCase().includes(searchLower)
+      )
+    : donations;
+  const blockedOnPage = filtered.filter(d => d.blocked && !d.manually_approved);
 
   return (
     <div>
@@ -132,16 +140,21 @@ export default function PageDonations() {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-        {FILTERS.map(([k, l]) => (
-          <button key={k} onClick={() => setFilter(k)} style={{
-            padding: "8px 16px", borderRadius: 8,
-            border: `1px solid ${filter === k ? T.accent : T.border}`,
-            background: filter === k ? T.accentDim : "transparent",
-            color: filter === k ? T.accent : T.textDim,
-            fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
-          }}>{l}</button>
-        ))}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          {FILTERS.map(([k, l]) => (
+            <button key={k} onClick={() => setFilter(k)} style={{
+              padding: "8px 16px", borderRadius: 8,
+              border: `1px solid ${filter === k ? T.accent : T.border}`,
+              background: filter === k ? T.accentDim : "transparent",
+              color: filter === k ? T.accent : T.textDim,
+              fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+            }}>{l}</button>
+          ))}
+        </div>
+        <div style={{ flex: 1, maxWidth: 260 }}>
+          <SearchInput value={search} onChange={e => setSearch(e.target.value)} placeholder="Search donator or message..." />
+        </div>
       </div>
 
       {/* Bulk actions bar */}
@@ -166,17 +179,14 @@ export default function PageDonations() {
 
       {loading ? (
         <LoadingState message="Loading donations..." />
-      ) : donations.length === 0 ? (
-        <Card style={{ textAlign: "center", padding: 48 }}>
-          <div style={{ fontSize: 36, marginBottom: 8 }}>📭</div>
-          <div style={{ color: T.textDim, fontSize: 15, marginBottom: 4 }}>No donations found</div>
-          <div style={{ color: T.textMuted, fontSize: 13 }}>
-            {filter === "all" ? "Donations will appear here when they come in" : `No ${filter} donations yet`}
-          </div>
-        </Card>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          title={search ? "No matching donations" : "No donations found"}
+          description={search ? `No results for "${search}"` : filter === "all" ? "Donations will appear here when they come in" : `No ${filter} donations yet`}
+        />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {donations.map(d => (
+          {filtered.map(d => (
             <Card key={d.id} style={{ padding: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 12, flex: 1, minWidth: 0 }}>

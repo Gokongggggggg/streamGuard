@@ -1,7 +1,7 @@
 import { useState } from "react";
 import T from "../lib/theme";
 import { api } from "../lib/api";
-import { Card, Btn, TextInput } from "./ui";
+import { Card, Btn, TextInput, PasswordInput } from "./ui";
 
 export default function AuthScreen({ onLogin, onBack }) {
   const [mode, setMode] = useState("login");
@@ -22,7 +22,9 @@ export default function AuthScreen({ onLogin, onBack }) {
       if (data.error) { setError(data.error); setLoading(false); return; }
       sessionStorage.setItem("sg_uid", data.user.id);
       onLogin(data.user);
-    } catch { setError("Connection failed"); }
+    } catch (e) {
+      setError(e.message || "Connection failed");
+    }
     setLoading(false);
   };
 
@@ -31,7 +33,7 @@ export default function AuthScreen({ onLogin, onBack }) {
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
       background: `radial-gradient(ellipse at 25% 15%, ${T.accentDim} 0%, ${T.bg} 55%)`,
     }}>
-      <div style={{ width: 400 }}>
+      <div style={{ width: 400, maxWidth: "90vw" }}>
         <button onClick={onBack} style={{
           background: "none", border: "none", color: T.textDim, cursor: "pointer",
           fontSize: 13, fontFamily: "inherit", marginBottom: 20, display: "block",
@@ -54,6 +56,7 @@ export default function AuthScreen({ onLogin, onBack }) {
                 background: mode === m ? T.accent : "transparent",
                 color: mode === m ? T.bg : T.textDim,
                 cursor: "pointer", fontFamily: "inherit", textTransform: "capitalize",
+                transition: "all 0.15s",
               }}>{m}</button>
             ))}
           </div>
@@ -62,7 +65,7 @@ export default function AuthScreen({ onLogin, onBack }) {
             <TextInput label="Username" value={username} onChange={e => setUsername(e.target.value)} placeholder="Your stream name" />
           )}
           <TextInput label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="streamer@example.com" />
-          <TextInput label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 6 characters"
+          <PasswordInput label="Password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 6 characters"
             onKeyDown={e => e.key === "Enter" && submit()} />
 
           {error && <div style={{ color: T.danger, fontSize: 13, marginBottom: 12, padding: "8px 12px", background: T.dangerDim, borderRadius: 6 }}>{error}</div>}
