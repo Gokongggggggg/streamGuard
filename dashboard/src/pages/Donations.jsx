@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import T from "../lib/theme";
 import { api } from "../lib/api";
 import { relativeTime, providerColor, providerLabel } from "../lib/utils";
-import { Badge, Card, Btn, LoadingState, SearchInput, EmptyState, useToast } from "../components/ui";
+import { Badge, Card, Btn, LoadingState, SearchInput, EmptyState, Stagger, useToast } from "../components/ui";
+import { useLang } from "../lib/i18n";
 
-const FILTERS = [["all", "All"], ["passed", "Passed"], ["blocked", "Blocked"]];
 const PAGE_SIZE = 20;
 
 export default function PageDonations() {
@@ -20,6 +20,9 @@ export default function PageDonations() {
   const [search, setSearch] = useState("");
   const toast = useToast();
   const intervalRef = useRef(null);
+  const { t } = useLang();
+
+  const FILTERS = [["all", t("donations.all")], ["passed", t("donations.passed")], ["blocked", t("donations.blocked")]];
 
   const endpoint = filter === "blocked" ? "/api/donations/blocked"
     : filter === "passed" ? "/api/donations/passed"
@@ -41,13 +44,11 @@ export default function PageDonations() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Auto-refresh every 15s (silent)
   useEffect(() => {
     intervalRef.current = setInterval(() => load(true), 15000);
     return () => clearInterval(intervalRef.current);
   }, [load]);
 
-  // Reset page & selection when switching filter
   useEffect(() => {
     setPage(1);
     setSelected(new Set());
@@ -56,7 +57,7 @@ export default function PageDonations() {
   const approve = async (id) => {
     try {
       await api(`/api/donations/${id}/approve`, { method: "POST" });
-      toast("Donation approved & sent to overlay", "success");
+      toast(t("donations.approved"), "success");
       load();
     } catch {
       toast("Failed to approve donation", "error");
@@ -91,7 +92,7 @@ export default function PageDonations() {
       a.download = "donations.csv";
       a.click();
       URL.revokeObjectURL(url);
-      toast("CSV downloaded", "success");
+      toast(t("donations.csvDone"), "success");
     } catch {
       toast("Failed to export CSV", "error");
     }
@@ -127,8 +128,8 @@ export default function PageDonations() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Donation History</h2>
-          <span style={{ fontSize: 12, color: T.textMuted }}>{total} total</span>
+          <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{t("donations.title")}</h2>
+          <span style={{ fontSize: 12, color: T.textMuted }}>{t("donations.total", { count: total })}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {lastRefresh && (
@@ -136,8 +137,8 @@ export default function PageDonations() {
               Updated {lastRefresh.toLocaleTimeString("id-ID")}
             </span>
           )}
-          <Btn onClick={exportCsv} v="outline" style={{ fontSize: 12, padding: "7px 14px" }}>Export CSV</Btn>
-          <Btn onClick={() => load()} v="ghost" style={{ fontSize: 13 }}>↻ Refresh</Btn>
+          <Btn onClick={exportCsv} v="outline" style={{ fontSize: 12, padding: "7px 14px" }}>{t("donations.exportCsv")}</Btn>
+          <Btn onClick={() => load()} v="ghost" style={{ fontSize: 13 }}>{t("donations.refresh")}</Btn>
         </div>
       </div>
 
@@ -154,11 +155,10 @@ export default function PageDonations() {
           ))}
         </div>
         <div style={{ flex: 1, maxWidth: 260 }}>
-          <SearchInput value={search} onChange={e => setSearch(e.target.value)} placeholder="Search donator or message..." />
+          <SearchInput value={search} onChange={e => setSearch(e.target.value)} placeholder={t("donations.search")} />
         </div>
       </div>
 
-      {/* Bulk actions bar */}
       {blockedOnPage.length > 0 && filter !== "passed" && (
         <div style={{
           display: "flex", alignItems: "center", gap: 12, marginBottom: 14,
@@ -168,25 +168,26 @@ export default function PageDonations() {
             <input type="checkbox" checked={blockedOnPage.length > 0 && blockedOnPage.every(d => selected.has(d.id))}
               onChange={selectAllBlocked}
               style={{ accentColor: T.accent }} />
-            Select all blocked ({blockedOnPage.length})
+            {t("donations.selectAll", { count: blockedOnPage.length })}
           </label>
           {selected.size > 0 && (
             <Btn onClick={bulkApprove} disabled={bulkLoading} v="outline" style={{ fontSize: 12, padding: "6px 14px" }}>
-              {bulkLoading ? "Approving..." : `Approve ${selected.size} selected`}
+              {bulkLoading ? t("donations.approving") : t("donations.approveSelected", { count: selected.size })}
             </Btn>
           )}
         </div>
       )}
 
       {loading ? (
-        <LoadingState message="Loading donations..." />
+        <LoadingState message={t("donations.loading")} />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title={search ? "No matching donations" : "No donations found"}
-          description={search ? `No results for "${search}"` : filter === "all" ? "Donations will appear here when they come in" : `No ${filter} donations yet`}
+          title={search ? t("donations.noMatch") : t("donations.noFound")}
+          description={search ? t("donations.noResults", { search }) : filter === "all" ? t("donations.willAppear") : t("donations.noYet", { filter })}
         />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <Stagger delay={40}>
           {filtered.map(d => (
             <Card key={d.id} style={{ padding: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -200,10 +201,10 @@ export default function PageDonations() {
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
                       <span style={{ fontWeight: 600, fontSize: 14 }}>{d.donator_name}</span>
                       <span style={{ color: T.accent, fontWeight: 700, fontSize: 13 }}>Rp{Number(d.amount).toLocaleString("id-ID")}</span>
-                      <Badge color={d.blocked ? "danger" : "success"}>{d.blocked ? "Blocked" : "Passed"}</Badge>
+                      <Badge color={d.blocked ? "danger" : "success"}>{d.blocked ? t("donations.blocked") : t("donations.passed")}</Badge>
                       {d.manually_approved && <Badge color="warning">Approved</Badge>}
                     </div>
-                    <div style={{ fontSize: 14, color: T.text, marginBottom: 4 }}>{d.message || "(no message)"}</div>
+                    <div style={{ fontSize: 14, color: T.text, marginBottom: 4 }}>{d.message || t("donations.noMessage")}</div>
                     <div style={{ display: "flex", gap: 12, fontSize: 11, color: T.textMuted, flexWrap: "wrap", alignItems: "center" }}>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
                         <span style={{
@@ -219,27 +220,27 @@ export default function PageDonations() {
                 </div>
                 {d.blocked && !d.manually_approved && (
                   <Btn onClick={() => approve(d.id)} v="outline" style={{ fontSize: 12, padding: "6px 12px", flexShrink: 0, marginLeft: 12 }}>
-                    Approve
+                    {t("donations.approve")}
                   </Btn>
                 )}
               </div>
             </Card>
           ))}
+          </Stagger>
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div style={{
           display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginTop: 24,
         }}>
           <Btn onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
-            v="ghost" style={{ fontSize: 13, padding: "8px 14px" }}>← Prev</Btn>
+            v="ghost" style={{ fontSize: 13, padding: "8px 14px" }}>{t("donations.prev")}</Btn>
           <span style={{ fontSize: 13, color: T.textDim }}>
-            Page {page} of {totalPages}
+            {t("donations.page", { page, total: totalPages })}
           </span>
           <Btn onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
-            v="ghost" style={{ fontSize: 13, padding: "8px 14px" }}>Next →</Btn>
+            v="ghost" style={{ fontSize: 13, padding: "8px 14px" }}>{t("donations.next")}</Btn>
         </div>
       )}
     </div>

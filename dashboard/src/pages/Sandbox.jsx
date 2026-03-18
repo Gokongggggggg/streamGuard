@@ -2,6 +2,7 @@ import { useState } from "react";
 import T from "../lib/theme";
 import { api } from "../lib/api";
 import { Badge, Card, Btn, TextInput, Field, useToast } from "../components/ui";
+import { useLang } from "../lib/i18n";
 
 const presets = [
   { label: "✅ Clean", msg: "Semangat bang! Keep up the content 🔥", c: "success" },
@@ -20,6 +21,7 @@ export default function PageSandbox({ user }) {
   const [showPreview, setShowPreview] = useState(false);
   const [previewSize, setPreviewSize] = useState("md");
   const toast = useToast();
+  const { t } = useLang();
 
   const sizeOpts = { sm: { h: 180, label: "S" }, md: { h: 320, label: "M" }, lg: { h: 500, label: "L" } };
 
@@ -43,22 +45,22 @@ export default function PageSandbox({ user }) {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>Testing Sandbox</h2>
+      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>{t("sandbox.title")}</h2>
       <p style={{ color: T.textDim, marginBottom: 24, fontSize: 14 }}>
-        Test the filter without real donations. See what gets blocked and what passes.
+        {t("sandbox.desc")}
       </p>
 
       <style>{`@media (max-width: 900px) { .sg-sandbox-grid { grid-template-columns: 1fr !important; } }`}</style>
       <div className="sg-sandbox-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
         <div>
           <Card>
-            <div style={{ fontWeight: 600, marginBottom: 16 }}>Send Test Donation</div>
-            <TextInput label="Donator" value={donator} onChange={e => setDonator(e.target.value)} />
-            <TextInput label="Amount (Rp)" type="number" value={amount} onChange={e => setAmount(e.target.value)} />
-            <Field label="Message">
+            <div style={{ fontWeight: 600, marginBottom: 16 }}>{t("sandbox.sendTest")}</div>
+            <TextInput label={t("sandbox.donator")} value={donator} onChange={e => setDonator(e.target.value)} />
+            <TextInput label={t("sandbox.amount")} type="number" value={amount} onChange={e => setAmount(e.target.value)} />
+            <Field label={t("sandbox.message")}>
               <textarea value={message} onChange={e => setMessage(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-                placeholder="Type donation message to test..."
+                placeholder={t("sandbox.msgPlaceholder")}
                 rows={3}
                 className="sg-input"
                 style={{
@@ -69,11 +71,11 @@ export default function PageSandbox({ user }) {
                   transition: "border-color 0.15s, box-shadow 0.15s",
                 }} />
             </Field>
-            <Btn onClick={send} style={{ width: "100%" }}>Send Test</Btn>
+            <Btn onClick={send} style={{ width: "100%" }}>{t("sandbox.send")}</Btn>
           </Card>
 
           <div style={{ marginTop: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: T.textDim, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Presets</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: T.textDim, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>{t("sandbox.presets")}</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {presets.map((p, i) => (
                 <button key={i} onClick={() => setMessage(p.msg)} style={{
@@ -89,7 +91,7 @@ export default function PageSandbox({ user }) {
         <div>
           <Card style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontWeight: 600, fontSize: 14 }}>Overlay Preview</div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{t("sandbox.overlayPreview")}</div>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 {showPreview && Object.entries(sizeOpts).map(([k, v]) => (
                   <button key={k} onClick={() => setPreviewSize(k)} style={{
@@ -101,7 +103,7 @@ export default function PageSandbox({ user }) {
                   }}>{v.label}</button>
                 ))}
                 <Btn onClick={() => setShowPreview(!showPreview)} v="outline" style={{ fontSize: 11, padding: "4px 10px" }}>
-                  {showPreview ? "Hide" : "Show"}
+                  {showPreview ? t("common.hide") : t("common.show")}
                 </Btn>
               </div>
             </div>
@@ -116,14 +118,14 @@ export default function PageSandbox({ user }) {
                   title="Overlay" />
               </div>
             ) : (
-              <div style={{ color: T.textDim, fontSize: 13 }}>Click Show to preview your OBS overlay live</div>
+              <div style={{ color: T.textDim, fontSize: 13 }}>{t("sandbox.showOverlay")}</div>
             )}
           </Card>
 
           <Card>
-            <div style={{ fontWeight: 600, marginBottom: 12, fontSize: 14 }}>Results</div>
+            <div style={{ fontWeight: 600, marginBottom: 12, fontSize: 14 }}>{t("sandbox.results")}</div>
             {results.length === 0 ? (
-              <div style={{ color: T.textDim, fontSize: 13, fontStyle: "italic" }}>Send a test to see results</div>
+              <div style={{ color: T.textDim, fontSize: 13, fontStyle: "italic" }}>{t("sandbox.noResults")}</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 340, overflowY: "auto" }}>
                 {results.map((r, i) => (

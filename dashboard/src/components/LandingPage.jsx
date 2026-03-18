@@ -1,5 +1,69 @@
+import { useEffect, useState } from "react";
 import T from "../lib/theme";
-import { Badge, Card, Btn } from "./ui";
+import { Badge, Card, Btn, ScrollReveal } from "./ui";
+
+function AnimatedHero({ onGetStarted }) {
+  const [show, setShow] = useState(false);
+  useEffect(() => { requestAnimationFrame(() => setShow(true)); }, []);
+
+  return (
+    <section className="sg-section sg-hero" style={{
+      textAlign: "center", padding: "80px 40px 60px",
+      maxWidth: 800, margin: "0 auto", position: "relative",
+      background: `radial-gradient(ellipse at 50% 0%, ${T.accentDim} 0%, transparent 60%)`,
+    }}>
+      {/* Animated background orbs */}
+      <div style={{
+        position: "absolute", top: -60, left: "20%", width: 300, height: 300, borderRadius: "50%",
+        background: `radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 70%)`,
+        animation: "sg-glow-pulse 4s ease-in-out infinite", pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute", top: -30, right: "15%", width: 200, height: 200, borderRadius: "50%",
+        background: `radial-gradient(circle, rgba(167,139,250,0.05) 0%, transparent 70%)`,
+        animation: "sg-glow-pulse 5s ease-in-out infinite 1s", pointerEvents: "none",
+      }} />
+
+      <div style={{
+        display: "inline-block", padding: "6px 16px", borderRadius: 999,
+        background: T.accentDim, border: `1px solid ${T.accent}22`,
+        fontSize: 13, color: T.accent, fontWeight: 500, marginBottom: 24,
+        opacity: show ? 1 : 0, transform: show ? "translateY(0)" : "translateY(10px)",
+        transition: "all 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s",
+      }}>
+        Gratis untuk streamer Indonesia
+      </div>
+      <h1 style={{
+        fontSize: 52, fontWeight: 800, lineHeight: 1.1, letterSpacing: -2, marginBottom: 20,
+        opacity: show ? 1 : 0, transform: show ? "translateY(0)" : "translateY(20px)",
+        transition: "all 0.7s cubic-bezier(0.16,1,0.3,1) 0.2s",
+      }}>
+        Stop spam judol<br />di donasi stream kamu
+      </h1>
+      <p style={{
+        fontSize: 18, color: T.textDim, lineHeight: 1.6, maxWidth: 560, margin: "0 auto 36px",
+        opacity: show ? 1 : 0, transform: show ? "translateY(0)" : "translateY(20px)",
+        transition: "all 0.7s cubic-bezier(0.16,1,0.3,1) 0.35s",
+      }}>
+        StreamGuard otomatis filter pesan donasi dari promosi judi online, pinjol ilegal, dan spam lainnya. Viewer kamu tetap bisa donasi lewat Saweria seperti biasa.
+      </p>
+      <div className="sg-hero-btns" style={{
+        display: "flex", gap: 12, justifyContent: "center",
+        opacity: show ? 1 : 0, transform: show ? "translateY(0)" : "translateY(20px)",
+        transition: "all 0.7s cubic-bezier(0.16,1,0.3,1) 0.5s",
+      }}>
+        <Btn onClick={onGetStarted} style={{ padding: "14px 32px", fontSize: 16, borderRadius: 10 }}>
+          Mulai Gratis
+        </Btn>
+        <Btn v="outline" onClick={() => {
+          document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
+        }} style={{ padding: "14px 32px", fontSize: 16, borderRadius: 10 }}>
+          Gimana Caranya?
+        </Btn>
+      </div>
+    </section>
+  );
+}
 
 export default function LandingPage({ onGetStarted }) {
   return (
@@ -28,66 +92,44 @@ export default function LandingPage({ onGetStarted }) {
         </Btn>
       </nav>
 
-      <section className="sg-section sg-hero" style={{
-        textAlign: "center", padding: "80px 40px 60px",
-        maxWidth: 800, margin: "0 auto",
-        background: `radial-gradient(ellipse at 50% 0%, ${T.accentDim} 0%, transparent 60%)`,
-      }}>
-        <div style={{
-          display: "inline-block", padding: "6px 16px", borderRadius: 999,
-          background: T.accentDim, border: `1px solid ${T.accent}22`,
-          fontSize: 13, color: T.accent, fontWeight: 500, marginBottom: 24,
-        }}>
-          Gratis untuk streamer Indonesia
-        </div>
-        <h1 style={{ fontSize: 52, fontWeight: 800, lineHeight: 1.1, letterSpacing: -2, marginBottom: 20 }}>
-          Stop spam judol<br />di donasi stream kamu
-        </h1>
-        <p style={{ fontSize: 18, color: T.textDim, lineHeight: 1.6, maxWidth: 560, margin: "0 auto 36px" }}>
-          StreamGuard otomatis filter pesan donasi dari promosi judi online, pinjol ilegal, dan spam lainnya. Viewer kamu tetap bisa donasi lewat Saweria seperti biasa.
-        </p>
-        <div className="sg-hero-btns" style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-          <Btn onClick={onGetStarted} style={{ padding: "14px 32px", fontSize: 16, borderRadius: 10 }}>
-            Mulai Gratis
-          </Btn>
-          <Btn v="outline" onClick={() => {
-            document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
-          }} style={{ padding: "14px 32px", fontSize: 16, borderRadius: 10 }}>
-            Gimana Caranya?
-          </Btn>
-        </div>
-      </section>
+      <AnimatedHero onGetStarted={onGetStarted} />
 
       <section className="sg-section" style={{ padding: "60px 40px", maxWidth: 900, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12, letterSpacing: -1 }}>Masalahnya</h2>
-          <p style={{ color: T.textDim, fontSize: 16, maxWidth: 600, margin: "0 auto" }}>
-            Promotor judi online memanfaatkan donasi sebagai media iklan murah di stream kamu
-          </p>
-        </div>
+        <ScrollReveal>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12, letterSpacing: -1 }}>Masalahnya</h2>
+            <p style={{ color: T.textDim, fontSize: 16, maxWidth: 600, margin: "0 auto" }}>
+              Promotor judi online memanfaatkan donasi sebagai media iklan murah di stream kamu
+            </p>
+          </div>
+        </ScrollReveal>
         <div className="sg-grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
           {[
             { icon: "💸", title: "Donasi = Iklan Judol", desc: "Cukup Rp5.000, pesan promosi judi langsung muncul di layar stream kamu dan ditonton ribuan viewer." },
             { icon: "🔤", title: "Filter Bawaan Mudah Dibypass", desc: "Spammer pakai trik seperti sl0t g4c0r, s.l.o.t, atau karakter khusus untuk lolos dari filter kata sederhana." },
             { icon: "⚠️", title: "Reputasi Streamer Rusak", desc: "Viewer melihat iklan judi di stream kamu. Ini bisa merusak image dan bahkan melanggar aturan platform." },
           ].map((item, i) => (
-            <Card key={i} style={{ textAlign: "center", padding: 28 }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>{item.icon}</div>
-              <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>{item.title}</div>
-              <div style={{ fontSize: 13, color: T.textDim, lineHeight: 1.6 }}>{item.desc}</div>
-            </Card>
+            <ScrollReveal key={i} delay={i * 100}>
+              <Card style={{ textAlign: "center", padding: 28 }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>{item.icon}</div>
+                <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>{item.title}</div>
+                <div style={{ fontSize: 13, color: T.textDim, lineHeight: 1.6 }}>{item.desc}</div>
+              </Card>
+            </ScrollReveal>
           ))}
         </div>
       </section>
 
       <section className="sg-section" style={{ padding: "60px 40px", background: `linear-gradient(180deg, transparent 0%, ${T.accentDim} 50%, transparent 100%)` }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12, letterSpacing: -1 }}>Solusinya</h2>
-            <p style={{ color: T.textDim, fontSize: 16, maxWidth: 600, margin: "0 auto" }}>
-              StreamGuard pakai NLP untuk deteksi spam yang lolos filter biasa
-            </p>
-          </div>
+          <ScrollReveal>
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12, letterSpacing: -1 }}>Solusinya</h2>
+              <p style={{ color: T.textDim, fontSize: 16, maxWidth: 600, margin: "0 auto" }}>
+                StreamGuard pakai NLP untuk deteksi spam yang lolos filter biasa
+              </p>
+            </div>
+          </ScrollReveal>
           <div className="sg-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             {[
               { icon: "🧠", title: "Filter NLP Berlapis", desc: "Normalisasi teks, keyword matching, regex pattern, dan klasifikasi ML." },
@@ -95,21 +137,25 @@ export default function LandingPage({ onGetStarted }) {
               { icon: "🔧", title: "Zero Setup Hassle", desc: "Tetap pakai Saweria seperti biasa. Cuma perlu paste 2 URL." },
               { icon: "📊", title: "Dashboard Lengkap", desc: "Monitor donasi yang di-block, approve false positive, dan lihat statistik." },
             ].map((item, i) => (
-              <Card key={i} glow={T.accent + "22"} style={{ padding: 28 }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>{item.icon}</div>
-                <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>{item.title}</div>
-                <div style={{ fontSize: 13, color: T.textDim, lineHeight: 1.6 }}>{item.desc}</div>
-              </Card>
+              <ScrollReveal key={i} delay={i * 80}>
+                <Card glow={T.accent + "22"} style={{ padding: 28 }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>{item.icon}</div>
+                  <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>{item.title}</div>
+                  <div style={{ fontSize: 13, color: T.textDim, lineHeight: 1.6 }}>{item.desc}</div>
+                </Card>
+              </ScrollReveal>
             ))}
           </div>
         </div>
       </section>
 
       <section id="how-it-works" className="sg-section" style={{ padding: "60px 40px", maxWidth: 900, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12, letterSpacing: -1 }}>Cara Kerja</h2>
-          <p style={{ color: T.textDim, fontSize: 16 }}>Setup 5 menit, proteksi selamanya</p>
-        </div>
+        <ScrollReveal>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12, letterSpacing: -1 }}>Cara Kerja</h2>
+            <p style={{ color: T.textDim, fontSize: 16 }}>Setup 5 menit, proteksi selamanya</p>
+          </div>
+        </ScrollReveal>
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
           {[
             { step: "01", title: "Daftar Akun", desc: "Buat akun gratis di StreamGuard. Kamu langsung dapat webhook URL dan overlay URL yang unik." },
@@ -117,76 +163,86 @@ export default function LandingPage({ onGetStarted }) {
             { step: "03", title: "Ganti Overlay di OBS", desc: "Di OBS, ganti URL Browser Source donasi kamu dengan overlay URL StreamGuard." },
             { step: "04", title: "Stream Dengan Tenang", desc: "StreamGuard otomatis filter setiap donasi. Yang bersih muncul, yang judol di-block." },
           ].map((item, i) => (
-            <div key={i} style={{
-              display: "flex", gap: 24, padding: "28px 0",
-              borderBottom: i < 3 ? `1px solid ${T.border}` : "none",
-            }}>
+            <ScrollReveal key={i} delay={i * 100}>
               <div style={{
-                width: 48, height: 48, borderRadius: 12, flexShrink: 0,
-                background: T.accentDim, border: `1px solid ${T.accent}33`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontWeight: 800, fontSize: 18, color: T.accent,
-              }}>{item.step}</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 6 }}>{item.title}</div>
-                <div style={{ fontSize: 14, color: T.textDim, lineHeight: 1.6 }}>{item.desc}</div>
+                display: "flex", gap: 24, padding: "28px 0",
+                borderBottom: i < 3 ? `1px solid ${T.border}` : "none",
+              }}>
+                <div style={{
+                  width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+                  background: T.accentDim, border: `1px solid ${T.accent}33`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 800, fontSize: 18, color: T.accent,
+                }}>{item.step}</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 6 }}>{item.title}</div>
+                  <div style={{ fontSize: 14, color: T.textDim, lineHeight: 1.6 }}>{item.desc}</div>
+                </div>
               </div>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </section>
 
       <section className="sg-section" style={{ padding: "60px 40px", maxWidth: 700, margin: "0 auto" }}>
-        <Card glow={T.danger + "33"} style={{ padding: 32 }}>
-          <div style={{ textAlign: "center", marginBottom: 20 }}>
-            <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Contoh Filter</h3>
-            <p style={{ color: T.textDim, fontSize: 14 }}>Pesan donasi seperti ini akan otomatis di-block</p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              { msg: "slot gacor maxwin hari ini deposit 25rb", reason: "Keyword: slot" },
-              { msg: "sl0t g4c0r m4xw1n d3p0sit 25rb", reason: "Leetspeak decoded → slot" },
-              { msg: "s l o t  g a c o r  maxwin link: judol.com", reason: "Pattern: spaced text + domain" },
-              { msg: "pinjaman online cair cepat WA 081234567890", reason: "Keyword: pinjaman online" },
-            ].map((item, i) => (
-              <div key={i} style={{
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-                padding: "12px 16px", borderRadius: 8,
-                background: T.dangerDim, border: `1px solid ${T.danger}22`,
-                gap: 12,
-              }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, color: T.text, marginBottom: 2, wordBreak: "break-word" }}>"{item.msg}"</div>
-                  <div style={{ fontSize: 11, color: T.danger }}>{item.reason}</div>
+        <ScrollReveal>
+          <Card glow={T.danger + "33"} style={{ padding: 32 }}>
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Contoh Filter</h3>
+              <p style={{ color: T.textDim, fontSize: 14 }}>Pesan donasi seperti ini akan otomatis di-block</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                { msg: "slot gacor maxwin hari ini deposit 25rb", reason: "Keyword: slot" },
+                { msg: "sl0t g4c0r m4xw1n d3p0sit 25rb", reason: "Leetspeak decoded → slot" },
+                { msg: "s l o t  g a c o r  maxwin link: judol.com", reason: "Pattern: spaced text + domain" },
+                { msg: "pinjaman online cair cepat WA 081234567890", reason: "Keyword: pinjaman online" },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "12px 16px", borderRadius: 8,
+                  background: T.dangerDim, border: `1px solid ${T.danger}22`,
+                  gap: 12,
+                }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, color: T.text, marginBottom: 2, wordBreak: "break-word" }}>"{item.msg}"</div>
+                    <div style={{ fontSize: 11, color: T.danger }}>{item.reason}</div>
+                  </div>
+                  <Badge color="danger">BLOCKED</Badge>
                 </div>
-                <Badge color="danger">BLOCKED</Badge>
-              </div>
-            ))}
-          </div>
-        </Card>
+              ))}
+            </div>
+          </Card>
+        </ScrollReveal>
       </section>
 
       <section className="sg-section" style={{ padding: "60px 40px", maxWidth: 700, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 700, letterSpacing: -1 }}>Harga</h2>
-        </div>
+        <ScrollReveal>
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <h2 style={{ fontSize: 32, fontWeight: 700, letterSpacing: -1 }}>Harga</h2>
+          </div>
+        </ScrollReveal>
         <div className="sg-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <Card style={{ padding: 28, textAlign: "center" }}>
-            <div style={{ fontSize: 13, color: T.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Free</div>
-            <div style={{ fontSize: 36, fontWeight: 800, marginBottom: 4 }}>Rp0</div>
-            <div style={{ fontSize: 13, color: T.textDim, marginBottom: 20 }}>selamanya</div>
-            <div style={{ fontSize: 13, color: T.textDim, lineHeight: 2, textAlign: "left" }}>
-              ✓ Filter NLP judol & pinjol<br />✓ 1 platform (Saweria)<br />✓ Dashboard + statistik<br />✓ Custom blocklist (10 kata)
-            </div>
-          </Card>
-          <Card glow={T.accent + "33"} style={{ padding: 28, textAlign: "center" }}>
-            <div style={{ fontSize: 13, color: T.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Pro</div>
-            <div style={{ fontSize: 36, fontWeight: 800, color: T.accent, marginBottom: 4 }}>Soon</div>
-            <div style={{ fontSize: 13, color: T.textDim, marginBottom: 20 }}>coming soon</div>
-            <div style={{ fontSize: 13, color: T.textDim, lineHeight: 2, textAlign: "left" }}>
-              ✓ Semua fitur Free<br />✓ Multi-platform support<br />✓ ML classification model<br />✓ Unlimited custom blocklist<br />✓ Priority support
-            </div>
-          </Card>
+          <ScrollReveal delay={0}>
+            <Card style={{ padding: 28, textAlign: "center" }}>
+              <div style={{ fontSize: 13, color: T.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Free</div>
+              <div style={{ fontSize: 36, fontWeight: 800, marginBottom: 4 }}>Rp0</div>
+              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 20 }}>selamanya</div>
+              <div style={{ fontSize: 13, color: T.textDim, lineHeight: 2, textAlign: "left" }}>
+                ✓ Filter NLP judol & pinjol<br />✓ 1 platform (Saweria)<br />✓ Dashboard + statistik<br />✓ Custom blocklist (10 kata)
+              </div>
+            </Card>
+          </ScrollReveal>
+          <ScrollReveal delay={100}>
+            <Card glow={T.accent + "33"} style={{ padding: 28, textAlign: "center" }}>
+              <div style={{ fontSize: 13, color: T.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Pro</div>
+              <div style={{ fontSize: 36, fontWeight: 800, color: T.accent, marginBottom: 4 }}>Soon</div>
+              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 20 }}>coming soon</div>
+              <div style={{ fontSize: 13, color: T.textDim, lineHeight: 2, textAlign: "left" }}>
+                ✓ Semua fitur Free<br />✓ Multi-platform support<br />✓ ML classification model<br />✓ Unlimited custom blocklist<br />✓ Priority support
+              </div>
+            </Card>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -194,13 +250,15 @@ export default function LandingPage({ onGetStarted }) {
         padding: "80px 40px", textAlign: "center",
         background: `radial-gradient(ellipse at 50% 100%, ${T.accentDim} 0%, transparent 60%)`,
       }}>
-        <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 16, letterSpacing: -1 }}>Siap lindungi stream kamu?</h2>
-        <p style={{ color: T.textDim, fontSize: 16, marginBottom: 32, maxWidth: 500, margin: "0 auto 32px" }}>
-          Daftar gratis sekarang. Setup 5 menit, tanpa ribet.
-        </p>
-        <Btn onClick={onGetStarted} style={{ padding: "16px 40px", fontSize: 17, borderRadius: 12 }}>
-          Daftar Gratis Sekarang
-        </Btn>
+        <ScrollReveal>
+          <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 16, letterSpacing: -1 }}>Siap lindungi stream kamu?</h2>
+          <p style={{ color: T.textDim, fontSize: 16, marginBottom: 32, maxWidth: 500, margin: "0 auto 32px" }}>
+            Daftar gratis sekarang. Setup 5 menit, tanpa ribet.
+          </p>
+          <Btn onClick={onGetStarted} style={{ padding: "16px 40px", fontSize: 17, borderRadius: 12 }}>
+            Daftar Gratis Sekarang
+          </Btn>
+        </ScrollReveal>
       </section>
 
       <footer className="sg-landing-nav" style={{

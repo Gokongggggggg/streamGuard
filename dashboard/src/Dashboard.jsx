@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
 import T from "./lib/theme";
 import { api } from "./lib/api";
-import { Btn } from "./components/ui";
+import { useLang } from "./lib/i18n";
+import { Btn, PageTransition } from "./components/ui";
 import PageOverview from "./pages/Overview";
 import PagePlatforms from "./pages/Platforms";
 import PageDonations from "./pages/Donations";
 import PageFilter from "./pages/Filter";
 import PageSandbox from "./pages/Sandbox";
 
-const nav = [
-  { id: "overview", label: "Overview", icon: "◉" },
-  { id: "platforms", label: "Platforms", icon: "⟁" },
-  { id: "donations", label: "Donations", icon: "◈" },
-  { id: "filter", label: "Filter", icon: "⊘" },
-  { id: "sandbox", label: "Sandbox", icon: "▷" },
+const navItems = [
+  { id: "overview", key: "nav.overview", icon: "◉" },
+  { id: "platforms", key: "nav.platforms", icon: "⟁" },
+  { id: "donations", key: "nav.donations", icon: "◈" },
+  { id: "filter", key: "nav.filter", icon: "⊘" },
+  { id: "sandbox", key: "nav.sandbox", icon: "▷" },
 ];
 
 export default function Dashboard({ user: init, onLogout }) {
@@ -21,6 +22,7 @@ export default function Dashboard({ user: init, onLogout }) {
   const [page, setPage] = useState("overview");
   const [stats, setStats] = useState({ total: 0, blocked: 0, passed: 0 });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t, lang, setLang } = useLang();
   const baseUrl = window.location.origin;
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function Dashboard({ user: init, onLogout }) {
         </div>
 
         <nav style={{ flex: 1 }}>
-          {nav.map(n => (
+          {navItems.map(n => (
             <button key={n.id} onClick={() => changePage(n.id)} className="sg-nav-btn" style={{
               display: "flex", alignItems: "center", gap: 10, width: "100%",
               padding: "11px 20px", border: "none", cursor: "pointer", fontFamily: "inherit",
@@ -92,12 +94,28 @@ export default function Dashboard({ user: init, onLogout }) {
               textAlign: "left",
             }}>
               <span style={{ fontSize: 15, width: 18 }}>{n.icon}</span>
-              {n.label}
+              {t(n.key)}
             </button>
           ))}
         </nav>
 
         <div style={{ padding: "0 20px" }}>
+          {/* Language toggle */}
+          <div style={{
+            display: "flex", borderRadius: 8, overflow: "hidden",
+            border: `1px solid ${T.border}`, marginBottom: 10,
+          }}>
+            {[["en", "EN"], ["id", "ID"]].map(([code, label]) => (
+              <button key={code} onClick={() => setLang(code)} style={{
+                flex: 1, padding: "6px 0", border: "none", fontSize: 12, fontWeight: 600,
+                background: lang === code ? T.accent : "transparent",
+                color: lang === code ? T.bg : T.textDim,
+                cursor: "pointer", fontFamily: "inherit",
+                transition: "all 0.15s",
+              }}>{label}</button>
+            ))}
+          </div>
+
           <div style={{
             padding: "10px 12px", borderRadius: 8, background: T.bg,
             marginBottom: 10, border: `1px solid ${T.border}`,
@@ -106,7 +124,7 @@ export default function Dashboard({ user: init, onLogout }) {
             <div style={{ fontSize: 11, color: T.textMuted }}>{user.email}</div>
           </div>
           <Btn onClick={onLogout} v="ghost" style={{ width: "100%", fontSize: 13, padding: "8px" }}>
-            Sign Out
+            {t("nav.signout")}
           </Btn>
         </div>
       </div>
@@ -114,11 +132,13 @@ export default function Dashboard({ user: init, onLogout }) {
       {/* Content */}
       <div className="sg-content" style={{ flex: 1, padding: 32, maxWidth: 960, overflowY: "auto", marginTop: 0 }}>
         <style>{`@media (max-width: 768px) { .sg-content { margin-top: 52px !important; } }`}</style>
-        {page === "overview" && <PageOverview user={user} stats={stats} baseUrl={baseUrl} />}
-        {page === "platforms" && <PagePlatforms user={user} baseUrl={baseUrl} />}
-        {page === "donations" && <PageDonations />}
-        {page === "filter" && <PageFilter user={user} onUserUpdate={setUser} />}
-        {page === "sandbox" && <PageSandbox user={user} />}
+        <PageTransition pageKey={page}>
+          {page === "overview" && <PageOverview user={user} stats={stats} baseUrl={baseUrl} />}
+          {page === "platforms" && <PagePlatforms user={user} baseUrl={baseUrl} />}
+          {page === "donations" && <PageDonations />}
+          {page === "filter" && <PageFilter user={user} onUserUpdate={setUser} />}
+          {page === "sandbox" && <PageSandbox user={user} />}
+        </PageTransition>
       </div>
     </div>
   );

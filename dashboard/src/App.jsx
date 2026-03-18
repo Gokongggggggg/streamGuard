@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import T from "./lib/theme";
 import { api } from "./lib/api";
 import { ToastProvider, Spinner } from "./components/ui";
+import { LangProvider, useLang } from "./lib/i18n";
 import LandingPage from "./components/LandingPage";
 import AuthScreen from "./components/AuthScreen";
 import Dashboard from "./Dashboard";
@@ -10,6 +11,7 @@ function AppContent() {
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
+  const { t } = useLang();
 
   useEffect(() => {
     const uid = sessionStorage.getItem("sg_uid");
@@ -35,7 +37,7 @@ function AppContent() {
   if (checking) return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: T.bg, color: T.textDim, gap: 12 }}>
       <Spinner size={28} />
-      <span>Memuat...</span>
+      <span>{t("common.loading")}</span>
     </div>
   );
 
@@ -46,8 +48,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ToastProvider>
-      <AppContent />
-    </ToastProvider>
+    <LangProvider>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </LangProvider>
   );
 }

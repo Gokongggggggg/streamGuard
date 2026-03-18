@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import T from "../lib/theme";
 import { api } from "../lib/api";
 import { Card, Btn, Toggle, useToast } from "../components/ui";
+import { useLang } from "../lib/i18n";
 
 const MAX_WORD_LENGTH = 50;
 
@@ -11,6 +12,7 @@ export default function PageFilter({ user, onUserUpdate }) {
   const [filterOn, setFilterOn] = useState(user.filter_enabled);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const toast = useToast();
+  const { t } = useLang();
 
   useEffect(() => {
     api("/api/blocklist").then(d => setWords(d.words || [])).catch(() => {});
@@ -21,7 +23,7 @@ export default function PageFilter({ user, onUserUpdate }) {
       const d = await api("/api/settings/filter", { method: "POST", body: { enabled: !filterOn } });
       setFilterOn(d.filter_enabled);
       onUserUpdate({ ...user, filter_enabled: d.filter_enabled });
-      toast(d.filter_enabled ? "Filter activated" : "Filter disabled", d.filter_enabled ? "success" : "info");
+      toast(d.filter_enabled ? t("filter.active") : t("filter.disabled"), d.filter_enabled ? "success" : "info");
     } catch {
       toast("Failed to toggle filter", "error");
     }
@@ -61,14 +63,14 @@ export default function PageFilter({ user, onUserUpdate }) {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 20 }}>Filter Settings</h2>
+      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 20 }}>{t("filter.title")}</h2>
 
       <Card style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: filterOn ? 16 : 0 }}>
           <div>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>NLP Judol Filter</div>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>{t("filter.nlpTitle")}</div>
             <div style={{ fontSize: 13, color: T.textDim }}>
-              {filterOn ? "Active — gambling spam is being filtered" : "Disabled — all donations pass through"}
+              {filterOn ? t("filter.active") : t("filter.disabled")}
             </div>
           </div>
           <Toggle on={filterOn} onToggle={toggle} />
@@ -78,9 +80,9 @@ export default function PageFilter({ user, onUserUpdate }) {
             display: "flex", gap: 12, flexWrap: "wrap",
           }}>
             {[
-              { label: "High-confidence keywords", count: 27, color: T.danger },
-              { label: "Context keywords", count: 10, color: T.warning },
-              { label: "Regex patterns", count: 10, color: T.accent },
+              { label: t("filter.highKeywords"), count: 27, color: T.danger },
+              { label: t("filter.ctxKeywords"), count: 10, color: T.warning },
+              { label: t("filter.regexPatterns"), count: 10, color: T.accent },
             ].map((item, i) => (
               <div key={i} style={{
                 padding: "8px 14px", borderRadius: 8, fontSize: 12,
@@ -97,22 +99,22 @@ export default function PageFilter({ user, onUserUpdate }) {
 
       {filterOn && (
         <Card style={{ marginBottom: 16 }}>
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>Filter Pipeline</div>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>{t("filter.pipeline")}</div>
           <div style={{ fontSize: 13, color: T.textDim, marginBottom: 16 }}>
-            Messages pass through each layer in sequence
+            {t("filter.pipelineDesc")}
           </div>
           <div style={{
             display: "flex", alignItems: "center", gap: 0,
             overflowX: "auto", paddingBottom: 4,
           }}>
             {[
-              { name: "Normalization", desc: "Clean & normalize text", active: true },
-              { name: "Blocklist", desc: "Custom blocked words", active: true },
-              { name: "Keywords", desc: "High-confidence match", active: true },
-              { name: "Regex", desc: "Pattern-based detection", active: true },
-              { name: "ML", desc: "Coming soon", active: false },
+              { name: t("filter.normalization"), desc: t("filter.normDesc"), active: true },
+              { name: t("filter.blocklist"), desc: t("filter.blockDesc"), active: true },
+              { name: t("filter.keywords"), desc: t("filter.keyDesc"), active: true },
+              { name: t("filter.regex"), desc: t("filter.regexDesc"), active: true },
+              { name: t("filter.ml"), desc: t("filter.mlDesc"), active: false },
             ].map((step, i, arr) => (
-              <div key={step.name} style={{ display: "flex", alignItems: "center" }}>
+              <div key={i} style={{ display: "flex", alignItems: "center" }}>
                 <div style={{
                   padding: "10px 16px", borderRadius: 8, minWidth: 120,
                   background: T.bg, border: `1px solid ${T.border}`,
@@ -142,15 +144,15 @@ export default function PageFilter({ user, onUserUpdate }) {
       )}
 
       <Card>
-        <div style={{ fontWeight: 600, marginBottom: 4 }}>Custom Blocklist</div>
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>{t("filter.customBlocklist")}</div>
         <div style={{ fontSize: 13, color: T.textDim, marginBottom: 16 }}>
-          Block additional words beyond the built-in judol filter
+          {t("filter.customDesc")}
         </div>
 
         <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
           <input value={newWord} onChange={e => setNewWord(e.target.value)}
             onKeyDown={e => e.key === "Enter" && add()}
-            placeholder="Add word to block..."
+            placeholder={t("filter.addPlaceholder")}
             maxLength={MAX_WORD_LENGTH}
             className="sg-input"
             style={{
@@ -158,14 +160,14 @@ export default function PageFilter({ user, onUserUpdate }) {
               background: T.bg, color: T.text, fontSize: 14, fontFamily: "inherit", outline: "none",
               transition: "border-color 0.15s, box-shadow 0.15s",
             }} />
-          <Btn onClick={add}>Add</Btn>
+          <Btn onClick={add}>{t("filter.add")}</Btn>
         </div>
         <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>
           {newWord.length > 0 && `${newWord.length}/${MAX_WORD_LENGTH}`}
         </div>
 
         {words.length === 0 ? (
-          <div style={{ color: T.textDim, fontSize: 13, fontStyle: "italic" }}>No custom words added</div>
+          <div style={{ color: T.textDim, fontSize: 13, fontStyle: "italic" }}>{t("filter.noWords")}</div>
         ) : (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {words.map(w => (
