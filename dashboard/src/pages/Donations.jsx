@@ -75,8 +75,24 @@ export default function PageDonations() {
     setBulkLoading(false);
   };
 
-  const exportCsv = () => {
-    window.open("/api/donations/export", "_blank");
+  const exportCsv = async () => {
+    try {
+      const userId = sessionStorage.getItem("sg_uid");
+      const res = await fetch("/api/donations/export", {
+        headers: { "x-user-id": userId },
+      });
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "donations.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast("CSV downloaded", "success");
+    } catch {
+      toast("Failed to export CSV", "error");
+    }
   };
 
   const toggleSelect = (id) => {
