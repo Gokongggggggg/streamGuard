@@ -20,6 +20,11 @@ router.get("/", authMiddleware, async (req, res) => {
   res.json({ donations, page, limit, total, totalPages: Math.ceil(total / limit) });
 });
 
+router.get("/recent", authMiddleware, async (req, res) => {
+  const donations = await DonationModel.getAll(req.user.id, 5, 0);
+  res.json({ donations });
+});
+
 router.get("/blocked", authMiddleware, async (req, res) => {
   const { limit, page, offset } = parsePagination(req.query);
   const [donations, total] = await Promise.all([

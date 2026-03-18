@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import T from "../lib/theme";
 import { api } from "../lib/api";
+import { relativeTime, providerColor, providerLabel } from "../lib/utils";
 import { Badge, Card, Btn, LoadingState, SearchInput, EmptyState, useToast } from "../components/ui";
 
 const FILTERS = [["all", "All"], ["passed", "Passed"], ["blocked", "Blocked"]];
@@ -203,9 +204,16 @@ export default function PageDonations() {
                       {d.manually_approved && <Badge color="warning">Approved</Badge>}
                     </div>
                     <div style={{ fontSize: 14, color: T.text, marginBottom: 4 }}>{d.message || "(no message)"}</div>
-                    <div style={{ display: "flex", gap: 12, fontSize: 11, color: T.textMuted, flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: 12, fontSize: 11, color: T.textMuted, flexWrap: "wrap", alignItems: "center" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <span style={{
+                          width: 6, height: 6, borderRadius: "50%",
+                          background: providerColor(d.provider), display: "inline-block",
+                        }} />
+                        {providerLabel(d.provider)}
+                      </span>
                       {d.filter_reason && <span>Reason: {d.filter_reason}</span>}
-                      <span>{new Date(d.created_at).toLocaleString("id-ID")}</span>
+                      <span title={new Date(d.created_at).toLocaleString("id-ID")}>{relativeTime(d.created_at)}</span>
                     </div>
                   </div>
                 </div>

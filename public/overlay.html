@@ -174,6 +174,27 @@
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function playChime() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.4);
+      } catch(e) {}
+    }
+
     function getInitial(name) {
       return (name || '?')[0].toUpperCase();
     }
@@ -190,19 +211,20 @@
 
     function showDonation(donation) {
       showing = true;
+      playChime();
 
       const el = document.createElement('div');
       el.className = 'donation-alert';
       el.innerHTML = `
         <div class="alert-card">
           <div class="alert-header">
-            <div class="alert-avatar">${getInitial(donation.donator)}</div>
+            <div class="alert-avatar">${getInitial(escapeHtml(donation.donator))}</div>
             <div class="alert-info">
-              <div class="alert-name">${donation.donator || 'Anonymous'}</div>
-              <div class="alert-amount">${formatAmount(donation.amount)}</div>
+              <div class="alert-name">${escapeHtml(donation.donator) || 'Anonymous'}</div>
+              <div class="alert-amount">${formatAmount(escapeHtml(donation.amount))}</div>
             </div>
           </div>
-          ${donation.message ? `<div class="alert-message">${donation.message}</div>` : ''}
+          ${donation.message ? `<div class="alert-message">${escapeHtml(donation.message)}</div>` : ''}
           <div class="alert-glow"></div>
         </div>
       `;
