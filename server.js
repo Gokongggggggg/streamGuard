@@ -53,6 +53,9 @@ const overlayClients = new Map();
 
 wss.on("connection", (ws) => {
   let userToken = null;
+  ws.isAlive = true;
+
+  ws.on("pong", () => { ws.isAlive = true; });
 
   ws.on("message", (data) => {
     try {
@@ -65,7 +68,9 @@ wss.on("connection", (ws) => {
         overlayClients.get(userToken).add(ws);
         console.log(`[WS] Overlay connected for token ${userToken.slice(0, 8)}... (${overlayClients.get(userToken).size} clients)`);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("[WS] Parse error:", e.message);
+    }
   });
 
   ws.on("close", () => {
@@ -77,6 +82,17 @@ wss.on("connection", (ws) => {
     }
   });
 });
+
+// WebSocket heartbeat — detect dead connections every 30s
+const heartbeatInterval = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (!ws.isAlive) return ws.terminate();
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
+
+wss.on("close", () => clearInterval(heartbeatInterval));
 
 /**
  * Broadcast donation to a specific user's overlay clients
@@ -202,8 +218,9 @@ app.post("/test/donation/:webhookToken", async (req, res) => {
 // ══════════════════════════════════════════
 
 const dashIndexPath = path.join(dashboardDist, "index.html");
+const dashboardBuilt = fs.existsSync(dashIndexPath);
 app.get("*", (req, res) => {
-  if (fs.existsSync(dashIndexPath)) {
+  if (dashboardBuilt) {
     res.sendFile(dashIndexPath);
   } else {
     res.status(404).send("Dashboard not built. Run: cd dashboard && npm run build");

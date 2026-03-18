@@ -75,6 +75,21 @@ const DonationModel = {
     return result.rows;
   },
 
+  async countAll(userId) {
+    const r = await pool.query("SELECT COUNT(*)::int as count FROM donations WHERE user_id = $1", [userId]);
+    return r.rows[0].count;
+  },
+
+  async countBlocked(userId) {
+    const r = await pool.query("SELECT COUNT(*)::int as count FROM donations WHERE user_id = $1 AND blocked = true", [userId]);
+    return r.rows[0].count;
+  },
+
+  async countPassed(userId) {
+    const r = await pool.query("SELECT COUNT(*)::int as count FROM donations WHERE user_id = $1 AND blocked = false", [userId]);
+    return r.rows[0].count;
+  },
+
   /**
    * Get stats for a user
    */

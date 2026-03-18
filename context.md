@@ -98,10 +98,12 @@ Indexes: `idx_donations_user_id`, `idx_donations_blocked`, `idx_donations_create
 
 ### Protected (requires `x-user-id` header) — **Note: no JWT, just user ID header**
 - `GET /api/me` — user info + donation stats
-- `GET /api/donations` — all donations (limit 50)
-- `GET /api/donations/blocked` — blocked only
-- `GET /api/donations/passed` — passed only
+- `GET /api/donations?page=1&limit=20` — all donations (paginated)
+- `GET /api/donations/blocked?page=1&limit=20` — blocked only (paginated)
+- `GET /api/donations/passed?page=1&limit=20` — passed only (paginated)
 - `POST /api/donations/:id/approve` — approve false positive, send to overlay
+- `POST /api/donations/bulk-approve` — `{ids: [1,2,3]}` bulk approve (max 50)
+- `GET /api/donations/export` — download CSV of all donations
 - `POST /api/settings/filter` — `{enabled: bool}` toggle filter
 - `GET /api/blocklist` — get custom words
 - `POST /api/blocklist` — `{word}` add word
@@ -175,8 +177,7 @@ npm run build        # Build to dashboard/dist/
 ## Known Limitations / TODOs
 1. **Auth insecure** — x-user-id header only, no JWT/session (noted in code)
 2. **ML filter layer** — placeholder, not implemented
-3. **Saweria signature verification** — code exists but disabled (streamKey passed as empty string)
+3. **Saweria signature verification** — uses env var but verification not enforced yet
 4. **Trakteer** — no signature/HMAC verification
-5. **Dashboard** — single file App.jsx (~1200 lines), could be split into components
-6. **No tests** — no test files exist
-7. **Overlay** — no XSS sanitization on donation message (innerHTML used)
+5. **No tests** — no test files exist
+6. **Overlay** — no XSS sanitization on donation message (innerHTML used)

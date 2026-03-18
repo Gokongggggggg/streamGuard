@@ -20,32 +20,69 @@ export default function Dashboard({ user: init, onLogout }) {
   const [user, setUser] = useState(init);
   const [page, setPage] = useState("overview");
   const [stats, setStats] = useState({ total: 0, blocked: 0, passed: 0 });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const baseUrl = window.location.origin;
 
   useEffect(() => {
     api("/api/me").then(d => {
       if (d.stats) setStats(d.stats);
       if (d.user) setUser(prev => ({ ...prev, ...d.user }));
-    });
+    }).catch(() => {});
   }, [page]);
+
+  const changePage = (id) => {
+    setPage(id);
+    setMobileMenuOpen(false);
+  };
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: T.bg, color: T.text }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .sg-sidebar { display: none !important; }
+          .sg-sidebar.open { display: flex !important; position: fixed; inset: 0; z-index: 100; width: 100% !important; }
+          .sg-content { padding: 16px !important; }
+          .sg-mobile-header { display: flex !important; }
+        }
+      `}</style>
+
+      {/* Mobile header */}
+      <div className="sg-mobile-header" style={{
+        display: "none", position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+        padding: "12px 16px", background: T.surface, borderBottom: `1px solid ${T.border}`,
+        alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>
+          Stream<span style={{ color: T.accent }}>Guard</span>
+        </div>
+        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{
+          background: "none", border: "none", color: T.text, fontSize: 22, cursor: "pointer",
+          padding: "4px 8px",
+        }}>☰</button>
+      </div>
+
       {/* Sidebar */}
-      <div style={{
+      <div className={`sg-sidebar${mobileMenuOpen ? " open" : ""}`} style={{
         width: 220, background: T.surface, borderRight: `1px solid ${T.border}`,
         padding: "24px 0", display: "flex", flexDirection: "column", flexShrink: 0,
       }}>
-        <div style={{ padding: "0 20px", marginBottom: 36 }}>
-          <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5 }}>
-            Stream<span style={{ color: T.accent }}>Guard</span>
+        <div style={{ padding: "0 20px", marginBottom: 36, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5 }}>
+              Stream<span style={{ color: T.accent }}>Guard</span>
+            </div>
+            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Dashboard v0.2</div>
           </div>
-          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Dashboard v0.2</div>
+          {mobileMenuOpen && (
+            <button onClick={() => setMobileMenuOpen(false)} style={{
+              background: "none", border: "none", color: T.textDim, fontSize: 20, cursor: "pointer",
+            }}>✕</button>
+          )}
         </div>
 
         <nav style={{ flex: 1 }}>
           {nav.map(n => (
-            <button key={n.id} onClick={() => setPage(n.id)} style={{
+            <button key={n.id} onClick={() => changePage(n.id)} style={{
               display: "flex", alignItems: "center", gap: 10, width: "100%",
               padding: "11px 20px", border: "none", cursor: "pointer", fontFamily: "inherit",
               background: page === n.id ? T.accentDim : "transparent",
@@ -75,7 +112,8 @@ export default function Dashboard({ user: init, onLogout }) {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, padding: 32, maxWidth: 960, overflowY: "auto" }}>
+      <div className="sg-content" style={{ flex: 1, padding: 32, maxWidth: 960, overflowY: "auto", marginTop: 0 }}>
+        <style>{`@media (max-width: 768px) { .sg-content { margin-top: 52px !important; } }`}</style>
         {page === "overview" && <PageOverview user={user} stats={stats} baseUrl={baseUrl} />}
         {page === "platforms" && <PagePlatforms user={user} baseUrl={baseUrl} />}
         {page === "donations" && <PageDonations />}

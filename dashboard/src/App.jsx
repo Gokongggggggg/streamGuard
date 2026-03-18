@@ -17,7 +17,10 @@ function AppContent() {
       api("/api/me").then(d => {
         if (d.user) setUser(d.user);
         setChecking(false);
-      }).catch(() => setChecking(false));
+      }).catch(() => {
+        sessionStorage.removeItem("sg_uid");
+        setChecking(false);
+      });
     } else {
       setChecking(false);
     }

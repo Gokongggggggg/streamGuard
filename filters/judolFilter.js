@@ -171,14 +171,22 @@ function checkPatterns(textVariants) {
 // MAIN FILTER FUNCTION
 // ══════════════════════════════════════════
 
+// Whitelist — messages containing ONLY these words won't trigger context keywords
+const WHITELIST_PHRASES = [
+  "bank transfer", "bank deposit", "setor tunai",
+  "time slot", "slot waktu", "slot antrian",
+  "withdraw from atm", "tarik tunai",
+];
+
 /**
  * Filter a donation message for gambling spam
- * 
+ *
  * @param {string} message - The donation message text
  * @param {string[]} customBlocklist - Additional words to block (from streamer settings)
+ * @param {string[]} customWhitelist - Words to whitelist / ignore (from streamer settings)
  * @returns {{ blocked: boolean, reason: string, confidence: number, layer: string }}
  */
-function filterMessage(message, customBlocklist = []) {
+function filterMessage(message, customBlocklist = [], customWhitelist = []) {
   // Empty messages are fine
   if (!message || message.trim() === "") {
     return { blocked: false, reason: "empty message", confidence: 1.0, layer: "none" };
@@ -187,11 +195,19 @@ function filterMessage(message, customBlocklist = []) {
   // Layer 1: Normalize
   const variants = normalizeText(message);
 
+  // Whitelist check — skip filtering if message matches a whitelisted phrase
+  const allWhitelist = [...WHITELIST_PHRASES, ...customWhitelist];
+  const lowerMsg = variants.normalized;
+  for (const phrase of allWhitelist) {
+    if (lowerMsg.includes(phrase.toLowerCase())) {
+      return { blocked: false, reason: `whitelisted: "${phrase}"`, confidence: 1.0, layer: "whitelist" };
+    }
+  }
+
   // Layer 2a: Custom blocklist (streamer's own words)
   if (customBlocklist.length > 0) {
-    const lowerMessage = variants.normalized;
     for (const word of customBlocklist) {
-      if (lowerMessage.includes(word.toLowerCase())) {
+      if (lowerMsg.includes(word.toLowerCase())) {
         return {
           blocked: true,
           reason: `Custom blocklist match: "${word}"`,
