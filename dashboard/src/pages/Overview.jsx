@@ -17,12 +17,44 @@ export default function PageOverview({ user, stats, baseUrl }) {
         <Stat label="Blocked" value={stats.blocked} color={T.danger} />
       </div>
 
-      <Card glow={T.accent + "33"}>
-        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Quick Setup</h3>
-        <CopyField label="Webhook URL — paste di Saweria Integration" value={`${baseUrl}/webhook/saweria/${user.webhook_token}`} />
-        <CopyField label="Webhook URL Trakteer — paste di Trakteer Integration → Webhook" value={`${baseUrl}/webhook/trakteer/${user.webhook_token}`} />
-        <CopyField label="Overlay URL — paste di OBS Browser Source" value={`${baseUrl}/overlay?token=${user.overlay_token}`} />
-      </Card>
+      <div style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
+        Quick Setup
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <span style={{
+              width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+              background: T.accentDim, fontSize: 14,
+            }}>⟁</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>Donation Platforms</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>Webhook URLs untuk menerima donasi</div>
+            </div>
+          </div>
+          <CopyField label="Saweria" value={`${baseUrl}/webhook/saweria/${user.webhook_token}`} />
+          <CopyField label="Trakteer" value={`${baseUrl}/webhook/trakteer/${user.webhook_token}`} />
+        </Card>
+
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <span style={{
+              width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+              background: T.successDim, fontSize: 14,
+            }}>▶</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>OBS Overlay</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>Browser Source untuk tampilkan donasi</div>
+            </div>
+          </div>
+          <CopyField label="Overlay URL" value={`${baseUrl}/overlay?token=${user.overlay_token}`} />
+          <div style={{ fontSize: 12, color: T.textDim, marginTop: 4, lineHeight: 1.5 }}>
+            Buka OBS → Sources → <strong>+</strong> → Browser → paste URL di atas.
+            Recommended: 800×600, custom CSS kosong.
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
